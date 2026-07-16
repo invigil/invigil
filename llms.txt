@@ -1,0 +1,34 @@
+# Invigil
+
+> A CI quality gate that grades a repo against a product-quality doctrine — not
+> code style. It turns promises to a stranger ("boots in 10 minutes", "every error
+> tells the fix", "README stays a landing page", "the published artifact still
+> installs today") into mechanical, exact-fix-reporting checks, and runs them in CI.
+
+## What it does
+
+- Static Doctrine Scorecard (every PR): scores a repo against Gates G1–G7, emits a
+  gate level + letter grade, and prints the exact fix for every failing check.
+- Stranger Gate (nightly, reusable workflow): boots each published artifact on a
+  clean runner and probes its core surface within a 10-minute budget.
+
+## Quickstart
+
+```bash
+pip install invigil
+invigil score .                 # text scorecard with fixes
+invigil score . --format json   # machine-readable
+```
+
+GitHub Action: `uses: rrskris/invigil@v1`.
+
+## Config
+
+`.invigil.yml` at the repo root (schema: schema/invigil.schema.json). Declares the
+target gate, which checks to disable, and the artifacts/probes the Stranger Gate boots.
+
+## Key files
+
+- CLI: src/invigil/cli.py — `invigil score [PATH] --format text|json|markdown|badge`
+- Checks: src/invigil/checks/*.py (grouped by gate)
+- Reporters: src/invigil/report.py

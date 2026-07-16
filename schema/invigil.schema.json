@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/rrskris/invigil/schema/invigil.schema.json",
+  "title": ".invigil.yml",
+  "description": "Per-repo Invigil configuration: what to grade, and the published artifacts/probes the Stranger Gate boots.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "integer", "enum": [1] },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "language": { "type": "string", "enum": ["python", "node", "go", "multi"] },
+        "min_gate": { "type": "string", "pattern": "^G[1-7]$", "description": "Target gate this repo aims for." },
+        "enforce": { "type": "boolean", "default": false, "description": "Report-only when false; hard-fail below min_gate when true." }
+      }
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "disable": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Check ids to skip (justify each in a comment)."
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "description": "What a user actually downloads. The Stranger Gate installs/boots each on a clean runner.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type"],
+        "properties": {
+          "type": { "type": "string", "enum": ["pypi", "ghcr"] },
+          "name": { "type": "string", "description": "PyPI package spec, e.g. invicton[all-providers]." },
+          "image": { "type": "string", "description": "Container image ref, e.g. ghcr.io/kaaval/kaaval:edge." },
+          "boot": { "type": "string", "description": "Optional custom boot command/script." },
+          "env": { "type": "object", "additionalProperties": { "type": "string" } },
+          "port": { "type": "integer" }
+        }
+      }
+    },
+    "probes": {
+      "type": "array",
+      "description": "HTTP probes run against the booted artifact; all must pass within the boot budget.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["url"],
+        "properties": {
+          "url": { "type": "string", "description": "Path or full URL to probe." },
+          "auth": { "type": "string", "description": "basic-auth as user:pass." },
+          "expect_status": { "type": "integer", "default": 200 },
+          "expect_contains": { "type": "string", "description": "Substring the response body must contain." },
+          "expect_json_count": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "path": { "type": "string", "description": "Optional JSONPath-ish key; default is the whole array." },
+              "min": { "type": "integer" }
+            },
+            "required": ["min"]
+          }
+        }
+      }
+    },
+    "services": {
+      "type": "object",
+      "description": "Sidecar services (docker service containers) the artifact needs, e.g. a database.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "image": { "type": "string" },
+          "env": { "type": "object", "additionalProperties": { "type": "string" } },
+          "ports": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["image"]
+      }
+    },
+    "boot_budget_minutes": {
+      "type": "integer",
+      "default": 10,
+      "description": "Stranger Gate fails if the artifact isn't serving probes within this many minutes (D1's 10-minute rule)."
+    }
+  }
+}

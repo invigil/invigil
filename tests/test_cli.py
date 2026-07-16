@@ -1,0 +1,68 @@
+"""End-to-end CLI: scoring a repo, output formats, and enforce exit codes."""
+
+import json
+
+import pytest
+
+from invigil import cli
+
+APACHE = "Apache License\nVersion 2.0\n"
+GOOD_README = "# App\n\n## Quick Start\n\n```\npip install app\n```\n"
+
+
+def make_good_repo(tmp_path):
+    (tmp_path / "LICENSE").write_text(APACHE)
+    (tmp_path / "README.md").write_text(GOOD_README)
+    return tmp_path
+
+
+def test_score_returns_scorecard(tmp_path):
+    make_good_repo(tmp_path)
+    sc, config = cli.score(tmp_path)
+    assert config.name == tmp_path.name
+    assert sc.results  # the full registry ran
+    assert sc.gate_level() in {"—", "G1", "G2", "G3", "G4", "G5", "G6", "G7"}
+    # A repo with only a LICENSE + README passes its G1 basics...
+    assert any(r.check.id == "license-apache2" and r.status.value == "pass" for r in sc.results)
+
+
+def test_gate_ge():
+    assert cli._gate_ge("G4", "G4")
+    assert cli._gate_ge("G5", "G4")
+    assert not cli._gate_ge("G2", "G4")
+    assert not cli._gate_ge("—", "G1")
+
+
+def test_main_report_only_never_fails(tmp_path, capsys):
+    # Empty repo scores terribly but report-only mode still exits 0.
+    rc = cli.main(["score", str(tmp_path)])
+    assert rc == 0
+    assert "Invigil scorecard" in capsys.readouterr().out
+
+
+def test_main_enforce_fails_below_gate(tmp_path):
+    # Empty repo can't reach the default G4 -> enforce exits 1.
+    assert cli.main(["score", str(tmp_path), "--enforce", "--min-gate", "G4"]) == 1
+
+
+def test_main_json_format(tmp_path, capsys):
+    make_good_repo(tmp_path)
+    cli.main(["score", str(tmp_path), "--format", "json"])
+    data = json.loads(capsys.readouterr().out)
+    assert data["repo"] == tmp_path.name
+
+
+def test_main_output_file(tmp_path):
+    make_good_repo(tmp_path)
+    out = tmp_path / "card.md"
+    cli.main(["score", str(tmp_path), "--format", "markdown", "--output", str(out)])
+    assert "Invigil" in out.read_text()
+
+
+def test_main_missing_path_errors():
+    assert cli.main(["score", "/no/such/repo/here"]) == 2
+
+
+def test_main_requires_subcommand():
+    with pytest.raises(SystemExit):
+        cli.main([])

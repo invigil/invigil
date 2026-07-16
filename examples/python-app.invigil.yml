@@ -1,0 +1,37 @@
+# Example .invigil.yml for a single-package Python web app.
+# Modeled on Invicton (a FastAPI app shipped as a PyPI package + one GHCR image).
+version: 1
+
+project:
+  name: invicton
+  language: python
+  min_gate: G4
+  enforce: false        # report-only; flip to true once the grade is stable
+
+# Layer 2 — Stranger Gate: what a user actually downloads.
+artifacts:
+  - type: pypi
+    name: "invicton[all-providers]"
+    env:
+      INVICTON_ADMIN_TOKEN: smoke
+  - type: ghcr
+    image: ghcr.io/invicton/invicton:latest
+    port: 8000
+    env:
+      INVICTON_ADMIN_TOKEN: smoke
+
+probes:
+  - url: "/"
+    auth: "admin:smoke"
+    expect_status: 200
+  - url: "/api/blueprints/"
+    auth: "admin:smoke"
+    expect_json_count: { min: 18 }
+  - url: "/api/plugins/catalog"
+    auth: "admin:smoke"
+    expect_json_count: { min: 5 }
+  - url: "/static/js/htmx.min.js"
+    auth: "admin:smoke"
+    expect_status: 200
+
+boot_budget_minutes: 10

@@ -1,0 +1,40 @@
+# Example .invigil.yml for a multi-image app with a database sidecar.
+# Modeled on Kaaval (CLI image + dashboard image + control-plane image + Postgres).
+version: 1
+
+project:
+  name: kaaval
+  language: multi
+  min_gate: G4
+  enforce: false
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    env:
+      POSTGRES_USER: kaaval
+      POSTGRES_PASSWORD: smoke
+      POSTGRES_DB: kaaval_db
+    ports: ["5432:5432"]
+
+artifacts:
+  - type: ghcr
+    image: ghcr.io/kaaval/kaaval-dashboard:edge
+    port: 3000
+  - type: ghcr
+    image: ghcr.io/kaaval/kaaval:edge
+    port: 8000
+    env:
+      DATABASE_URL: "postgresql://kaaval:smoke@localhost:5432/kaaval_db"
+      KAAVAL_SECRET_KEY: smoke
+      KAAVAL_REFRESH_SECRET_KEY: smoke
+      KAAVAL_ADMIN_PASSWORD: smoke-admin
+
+probes:
+  - url: "http://127.0.0.1:3000/login"
+    expect_status: 200
+    expect_contains: "kaaval"
+  - url: "http://127.0.0.1:8000/"
+    expect_contains: '"status":"ok"'
+
+boot_budget_minutes: 10

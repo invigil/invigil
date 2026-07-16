@@ -1,0 +1,76 @@
+name: "Invigil — Doctrine Quality Gate"
+description: "Grade a repo against a product-quality doctrine (a stranger boots it in 10 min; every error tells the fix; README <=300 lines; artifacts smoke-tested daily) and post a scorecard."
+author: "Vamshi Krishna Santhapuri"
+branding:
+  icon: "check-circle"
+  color: "purple"
+
+inputs:
+  path:
+    description: "Path to the repo to score."
+    required: false
+    default: "."
+  min-gate:
+    description: "Target gate, e.g. G4. Defaults to project.min_gate in .invigil.yml."
+    required: false
+    default: ""
+  enforce:
+    description: "Fail the job if the repo is below its target gate. Report-only when false."
+    required: false
+    default: "false"
+  comment:
+    description: "Post/update the scorecard as a PR comment (needs github-token)."
+    required: false
+    default: "true"
+  github-token:
+    description: "Token used to post the PR comment."
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6
+      with:
+        python-version: "3.12"
+
+    - name: Install Invigil (bundled with this action ref)
+      shell: bash
+      run: pip install --quiet "${{ github.action_path }}"
+
+    - name: Score
+      id: score
+      shell: bash
+      run: |
+        cd "${{ inputs.path }}"
+        invigil score . --format markdown --output "$RUNNER_TEMP/invigil-report.md"
+        invigil score . --format badge   --output "$RUNNER_TEMP/invigil-badge.json"
+        invigil score . --format text   # human-readable in the job log
+        echo "report=$RUNNER_TEMP/invigil-report.md" >> "$GITHUB_OUTPUT"
+
+    - name: Comment on PR
+      if: ${{ inputs.comment == 'true' && github.event_name == 'pull_request' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        marker="<!-- invigil-scorecard -->"
+        body="$(printf '%s\n\n%s' "$marker" "$(cat "$RUNNER_TEMP/invigil-report.md")")"
+        # Update the existing Invigil comment if one exists, else create it.
+        id=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
+              --jq ".[] | select(.body | contains(\"$marker\")) | .id" | head -n1)
+        if [ -n "$id" ]; then
+          gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$id" -f body="$body" >/dev/null
+        else
+          gh pr comment "${{ github.event.pull_request.number }}" --body "$body"
+        fi
+
+    - name: Enforce gate
+      if: ${{ inputs.enforce == 'true' }}
+      shell: bash
+      run: |
+        cd "${{ inputs.path }}"
+        args=""
+        [ -n "${{ inputs.min-gate }}" ] && args="--min-gate ${{ inputs.min-gate }}"
+        invigil score . --enforce $args >/dev/null

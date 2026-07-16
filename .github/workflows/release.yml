@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Build, sign, SBOM, publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # create the GitHub Release
+      id-token: write        # cosign keyless + PyPI trusted publishing (OIDC)
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist + wheel
+        run: |
+          pip install build
+          python -m build
+
+      - name: Generate SBOM (SPDX)
+        uses: anchore/sbom-action@e11c554f704a0b820cbf8c51673f6945e0731532  # v0.20.0
+        with:
+          path: .
+          format: spdx-json
+          output-file: invigil.spdx.json
+
+      - name: Sign artifacts (cosign keyless)
+        uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382  # v3.6.0
+      - name: Sign
+        run: |
+          for f in dist/* invigil.spdx.json; do
+            cosign sign-blob --yes "$f" --output-signature "$f.sig" --output-certificate "$f.pem"
+          done
+
+      - name: Publish to PyPI (trusted publishing)
+        uses: pypa/gh-action-pypi-publish@67339c736fd9354cd4f8cb0b744f2b82a74b5c70  # v1.12.3
+
+      - name: GitHub Release
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda  # v2.2.1
+        with:
+          files: |
+            dist/*
+            invigil.spdx.json
+            dist/*.sig
+            dist/*.pem
+          generate_release_notes: true

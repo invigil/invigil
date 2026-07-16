@@ -1,0 +1,43 @@
+name: Stranger Gate (reusable)
+
+# Layer 2 of Invigil. Generalizes the copy-pasted `smoke-published.yml` workflows:
+# on a clean runner, boot each published artifact declared in the caller's
+# .invigil.yml (pip install / docker run + any service containers) and probe its
+# core surface within the 10-minute budget. Repo CI tests source; this tests what
+# users actually download, after dependency drift.
+#
+# Callers use it in ~5 lines:
+#   jobs:
+#     stranger:
+#       uses: rrskris/invigil/.github/workflows/stranger-gate.yml@v1
+
+on:
+  workflow_call:
+    inputs:
+      path:
+        description: "Path (in the caller repo) to the dir holding .invigil.yml."
+        required: false
+        type: string
+        default: "."
+      invigil-ref:
+        description: "Invigil version/ref to install (pypi spec or a VCS ref)."
+        required: false
+        type: string
+        default: "invigil"
+
+permissions:
+  contents: read
+
+jobs:
+  stranger:
+    name: Boot published artifacts like a stranger
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6
+        with:
+          python-version: "3.12"
+      - name: Install Invigil
+        run: pip install --quiet "${{ inputs.invigil-ref }}"
+      - name: Run the Stranger Gate
+        run: invigil stranger "${{ inputs.path }}"

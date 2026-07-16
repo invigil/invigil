@@ -1,0 +1,54 @@
+name: Portfolio grades
+
+# C5 — cross-repo aggregation. On a schedule, score every tracked repo and
+# regenerate PORTFOLIO.md's grade table, so the portfolio grid is a machine
+# artifact instead of a hand-typed, always-stale table. Commits only when the
+# grades actually change.
+
+on:
+  schedule:
+    - cron: "0 5 * * 1"   # Monday mornings
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  # Space-separated owner/name of the repos to grade. Edit here to add repos.
+  REPOS: "StratumOSS/Stratum kaaval/kaaval"
+
+jobs:
+  portfolio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet .
+
+      - name: Clone tracked repos + score them (this repo included)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          paths="."
+          for slug in $REPOS; do
+            dir="_repo_$(basename "$slug")"
+            gh repo clone "$slug" "$dir" -- --depth 1
+            paths="$paths $dir"
+          done
+          [ -f PORTFOLIO.md ] || printf '# Portfolio grades\n\n' > PORTFOLIO.md
+          invigil portfolio $paths --update PORTFOLIO.md
+          rm -rf _repo_*
+
+      - name: Commit if changed
+        run: |
+          if ! git diff --quiet PORTFOLIO.md; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add PORTFOLIO.md
+            git commit -m "chore: refresh portfolio grades [skip ci]"
+            git push
+          else
+            echo "grades unchanged"
+          fi

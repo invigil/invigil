@@ -1,0 +1,10 @@
+# Invigil grades itself (dogfood). Invigil is a library + GitHub Action published
+# to PyPI as `invigil`; it isn't a booted service, so the Stranger Gate's
+# artifacts/probes are intentionally omitted here.
+version: 1
+
+project:
+  name: invigil
+  language: python
+  min_gate: G4
+  enforce: false        # report-only until the grade stabilizes (C6 flips this)
