@@ -5,6 +5,9 @@
 [![CI](https://github.com/invigil/invigil/actions/workflows/ci.yml/badge.svg)](https://github.com/invigil/invigil/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/invigil)](https://pypi.org/project/invigil/)
+[![Docker](https://img.shields.io/badge/ghcr-invigil%2Finvigil-2496ed?logo=docker&logoColor=white)](https://github.com/invigil/invigil/pkgs/container/invigil)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/invigil/invigil/badge)](https://scorecard.dev/viewer/?uri=github.com/invigil/invigil)
+[![Invigil grade](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/invigil/invigil/main/badges/invigil.json)](https://github.com/invigil/invigil)
 
 Linters check your *code*. Dependabot checks your *dependencies*. **Nothing checks whether
 your project keeps the promises a stranger relies on:** that they can boot it in ten minutes,
@@ -94,8 +97,9 @@ Two layers, matching the doctrine:
   smoke test, ≥5 good-first-issues, docs index, `llms.txt`/`AGENTS.md`, and more. Emits text /
   JSON / Markdown / a shields.io badge.
 - **Stranger Gate** (nightly, reusable) — on a clean runner, installs and boots each *published*
-  artifact you declare and probes its core surface within a 10-minute budget. One reusable
-  workflow replaces the 60-line `smoke-published.yml` every repo copy-pastes:
+  artifact you declare and probes its core surface within a 10-minute budget. Web services get
+  HTTP probes; a CLI image (an artifact with a `command:`) is run to completion and must exit 0.
+  One reusable workflow replaces the 60-line `smoke-published.yml` every repo copy-pastes:
 
 ```yaml
 # .github/workflows/stranger-gate.yml
@@ -144,7 +148,7 @@ A gate developers bypass is dead weight, so Invigil is built for zero friction:
   ```yaml
   # .pre-commit-config.yaml
   - repo: https://github.com/invigil/invigil
-    rev: v1.0.0
+    rev: v1        # tracks the latest v1.x.y
     hooks: [{ id: invigil-layout }, { id: invigil-secrets }]
   ```
 
