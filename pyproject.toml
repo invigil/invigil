@@ -26,6 +26,18 @@ Issues = "https://github.com/rrskris/invigil/issues"
 [project.scripts]
 invigil = "invigil.cli:main"
 
+[project.optional-dependencies]
+# A real pip "extra" so `pip install -e ".[dev]"` works on a clean CI runner.
+# (A PEP 735 [dependency-groups] table is NOT installable via the [dev] extra
+# syntax — pip silently succeeds with only a warning, which masks a missing
+# pytest until the runner fails. Clean-machine green is a fact; local green is
+# an opinion.)
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+]
+
 [dependency-groups]
 dev = [
     "pytest>=8.0",
