@@ -33,7 +33,7 @@ def smoke_published(ctx: Context) -> CheckResult:
         check,
         Status.FAIL,
         "no scheduled published-artifact smoke test",
-        "add a scheduled workflow (or `uses: rrskris/invigil/.github/workflows/stranger-gate.yml@v1`) "
+        "add a scheduled workflow (or `uses: invigil/invigil/.github/workflows/stranger-gate.yml@v1`) "
         "that installs+boots the published artifact daily",
     )
 

@@ -20,8 +20,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/rrskris/invigil"
-Issues = "https://github.com/rrskris/invigil/issues"
+Homepage = "https://github.com/invigil/invigil"
+Issues = "https://github.com/invigil/invigil/issues"
 
 [project.scripts]
 invigil = "invigil.cli:main"

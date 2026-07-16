@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/rrskris/invigil/schema/invigil.schema.json",
+  "$id": "https://github.com/invigil/invigil/schema/invigil.schema.json",
   "title": ".invigil.yml",
   "description": "Per-repo Invigil configuration: what to grade, and the published artifacts/probes the Stranger Gate boots.",
   "type": "object",

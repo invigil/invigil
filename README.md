@@ -2,7 +2,7 @@
 
 **A CI quality gate that grades a repo against a product-quality *doctrine* — not code style.**
 
-[![CI](https://github.com/rrskris/invigil/actions/workflows/ci.yml/badge.svg)](https://github.com/rrskris/invigil/actions/workflows/ci.yml)
+[![CI](https://github.com/invigil/invigil/actions/workflows/ci.yml/badge.svg)](https://github.com/invigil/invigil/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/invigil)](https://pypi.org/project/invigil/)
 
@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: rrskris/invigil@v1        # the doctrine scorecard
+      - uses: invigil/invigil@v1        # the doctrine scorecard
         with:
           enforce: "false"              # flip to true once the grade is stable
 ```
@@ -91,7 +91,7 @@ on:
   workflow_dispatch:
 jobs:
   stranger:
-    uses: rrskris/invigil/.github/workflows/stranger-gate.yml@v1
+    uses: invigil/invigil/.github/workflows/stranger-gate.yml@v1
 ```
 
 ## Configuration
@@ -129,7 +129,7 @@ A gate developers bypass is dead weight, so Invigil is built for zero friction:
 
   ```yaml
   # .pre-commit-config.yaml
-  - repo: https://github.com/rrskris/invigil
+  - repo: https://github.com/invigil/invigil
     rev: v1.0.0
     hooks: [{ id: invigil-layout }, { id: invigil-secrets }]
   ```
@@ -155,7 +155,7 @@ drift and registries change. Only automation is awake then. Invigil is that auto
 ## Contributing
 
 Issues and PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) and
-[good first issues](https://github.com/rrskris/invigil/labels/good%20first%20issue). Invigil
+[good first issues](https://github.com/invigil/invigil/labels/good%20first%20issue). Invigil
 grades itself in CI (`self-score` job); a PR that lowers Invigil's own grade won't merge.
 
 ## License

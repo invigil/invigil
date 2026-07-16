@@ -27,4 +27,4 @@ All notable changes to Invigil are documented here. Format follows
 - **AI-native group (`ai`):** `llms-no-secrets` and `agent-scope-visibility` — the
   statically-honest first slice of "agent blast radius".
 
-[Unreleased]: https://github.com/rrskris/invigil/commits/main
+[Unreleased]: https://github.com/invigil/invigil/commits/main

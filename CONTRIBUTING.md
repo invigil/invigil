@@ -7,7 +7,7 @@ its own grade won't merge.
 ## Dev setup
 
 ```bash
-git clone https://github.com/rrskris/invigil
+git clone https://github.com/invigil/invigil
 cd invigil
 python -m venv .venv && . .venv/bin/activate
 pip install -e . ruff pytest pytest-cov

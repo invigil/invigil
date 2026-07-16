@@ -1,6 +1,6 @@
 # Invigil pre-commit hooks. Add to your .pre-commit-config.yaml:
 #
-#   - repo: https://github.com/rrskris/invigil
+#   - repo: https://github.com/invigil/invigil
 #     rev: v1.0.0
 #     hooks:
 #       - id: invigil-layout

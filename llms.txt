@@ -20,7 +20,7 @@ invigil score .                 # text scorecard with fixes
 invigil score . --format json   # machine-readable
 ```
 
-GitHub Action: `uses: rrskris/invigil@v1`.
+GitHub Action: `uses: invigil/invigil@v1`.
 
 ## Config
 
