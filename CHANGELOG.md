@@ -4,6 +4,22 @@ All notable changes to Invigil are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-07-16
+
+### Added
+- **Docker distribution:** the CLI ships as a container image at
+  `ghcr.io/invigil/invigil` (`latest`, `X`, `X.Y.Z` tags), built and
+  cosign-signed by the same release workflow as the PyPI artifacts — Invigil now
+  runs in GitLab/Jenkins/any CI without a Python setup.
+- **Stranger Gate CLI artifacts:** a `ghcr` artifact with `command:` runs to
+  completion (`docker run --rm`) and asserts exit 0 + optional
+  `expect_contains`, instead of booting a daemon. Invigil's own `.invigil.yml`
+  now dogfoods both published channels nightly.
+- **`v1` moving major tag** is maintained automatically on every release, so
+  `uses: invigil/invigil@v1` and pre-commit `rev: v1` track the newest v1.x.y.
+- README install matrix covering all four channels (PyPI / Action / Docker /
+  pre-commit).
+
 ## [1.0.0] - 2026-07-16
 
 ### Added
@@ -27,4 +43,5 @@ All notable changes to Invigil are documented here. Format follows
 - **AI-native group (`ai`):** `llms-no-secrets` and `agent-scope-visibility` — the
   statically-honest first slice of "agent blast radius".
 
+[1.1.0]: https://github.com/invigil/invigil/releases/tag/v1.1.0
 [1.0.0]: https://github.com/invigil/invigil/releases/tag/v1.0.0
