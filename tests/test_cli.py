@@ -66,3 +66,31 @@ def test_main_missing_path_errors():
 def test_main_requires_subcommand():
     with pytest.raises(SystemExit):
         cli.main([])
+
+
+def test_check_group_offline_passes_and_fails(tmp_path, capsys):
+    # 'layout' group: an empty repo fails (no LICENSE/README) -> exit 1
+    assert cli.main(["check", "layout", str(tmp_path)]) == 1
+    assert "invigil check layout" in capsys.readouterr().out
+    # once the layout basics exist, the group passes -> exit 0
+    make_good_repo(tmp_path)
+    assert cli.main(["check", "layout", str(tmp_path)]) == 0
+
+
+def test_score_offline_marks_network_skipped(tmp_path):
+    make_good_repo(tmp_path)
+    sc, _ = cli.score(tmp_path, offline=True)
+    net = [r for r in sc.results if r.check.layer == "network"]
+    assert net and all(r.status.value == "skip" for r in net)
+
+
+def test_score_group_filter_runs_subset(tmp_path):
+    make_good_repo(tmp_path)
+    sc, _ = cli.score(tmp_path, only_groups={"layout"})
+    assert sc.results and all(r.check.group == "layout" for r in sc.results)
+
+
+def test_score_layer_filter_local_only(tmp_path):
+    make_good_repo(tmp_path)
+    sc, _ = cli.score(tmp_path, only_layers={"local"})
+    assert all(r.check.layer == "local" for r in sc.results)

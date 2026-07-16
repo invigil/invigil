@@ -32,11 +32,31 @@ def register(**meta):
     return wrap
 
 
-def run_all(ctx: Context) -> list[CheckResult]:
+def run_all(
+    ctx: Context,
+    *,
+    only_layers: set[str] | None = None,
+    only_groups: set[str] | None = None,
+    offline: bool = False,
+) -> list[CheckResult]:
+    """Run the registered checks, optionally filtered by layer/group.
+
+    - `only_layers` / `only_groups`: run just that subset (the rest are omitted,
+      not reported — used by `invigil check <group>` and `--layer`).
+    - `offline`: never touch the network; `network`-layer checks become a SKIP
+      instead of running (used by pre-commit and `--offline`).
+    """
     results: list[CheckResult] = []
     for check, fn in REGISTRY:
+        if only_layers and check.layer not in only_layers:
+            continue
+        if only_groups and check.group not in only_groups:
+            continue
         if check.id in ctx.config.disabled_checks:
             results.append(CheckResult(check, Status.SKIP, detail="disabled in .invigil.yml"))
+            continue
+        if offline and check.layer == "network":
+            results.append(CheckResult(check, Status.SKIP, detail="offline — network check skipped"))
             continue
         try:
             results.append(fn(ctx))
@@ -48,6 +68,7 @@ def run_all(ctx: Context) -> list[CheckResult]:
 # Import check modules for their registration side effects. Order is cosmetic;
 # checks are grouped in the report by gate, not by import order.
 from . import (  # noqa: E402,F401
+    ai_native,
     g1_stranger,
     g2_errors,
     g3_supply,
@@ -55,3 +76,57 @@ from . import (  # noqa: E402,F401
     g5_doors,
     tier1_secrets,
 )
+
+# Central layer/group tagging — one place to maintain, so the 20+ `@register`
+# call sites stay clean. id -> (layer, group). Anything unlisted keeps the Check
+# defaults (local, "").
+TAGS: dict[str, tuple[str, str]] = {
+    # layout (G1 stranger-readiness)
+    "license-apache2": ("local", "layout"),
+    "readme-present": ("local", "layout"),
+    "readme-length": ("local", "layout"),
+    "readme-quickstart": ("local", "layout"),
+    "env-example": ("local", "layout"),
+    # secrets (Tier-1)
+    "no-tracked-secrets": ("local", "secrets"),
+    "gitleaks-clean": ("local", "secrets"),
+    # errors (G2)
+    "deep-health": ("local", "errors"),
+    "error-correlation-id": ("local", "errors"),
+    "error-path-tests": ("local", "errors"),
+    # supply-chain (G3)
+    "smoke-published": ("local", "supply-chain"),
+    "dependabot": ("local", "supply-chain"),
+    "actions-sha-pinned": ("local", "supply-chain"),
+    "lockfile-enforced": ("local", "supply-chain"),
+    "coverage-gate": ("local", "supply-chain"),
+    "version-matrix": ("local", "supply-chain"),
+    # evidence (G4)
+    "scorecard-workflow": ("local", "evidence"),
+    "scorecard-score": ("network", "evidence"),
+    "signed-releases-sbom": ("local", "evidence"),
+    "security-policy": ("local", "evidence"),
+    "changelog": ("local", "evidence"),
+    # doors (G5) + ai
+    "docs-index": ("local", "doors"),
+    "contributor-door": ("local", "doors"),
+    "code-of-conduct": ("local", "doors"),
+    "operator-door": ("local", "doors"),
+    "ai-door": ("local", "ai"),
+    "good-first-issues": ("network", "doors"),
+    # ai-native (M5)
+    "llms-no-secrets": ("local", "ai"),
+    "agent-scope-visibility": ("local", "ai"),
+}
+
+
+def _apply_tags() -> None:
+    for check, _ in REGISTRY:
+        check.layer, check.group = TAGS.get(check.id, (check.layer, check.group))
+
+
+_apply_tags()
+
+# Group/layer names the CLI exposes (for `invigil check <group>` / `--layer`).
+GROUPS = sorted({g for _, g in TAGS.values()})
+LAYERS = ("local", "network", "heavy")

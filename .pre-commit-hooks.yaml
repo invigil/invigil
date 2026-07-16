@@ -1,0 +1,23 @@
+# Invigil pre-commit hooks. Add to your .pre-commit-config.yaml:
+#
+#   - repo: https://github.com/rrskris/invigil
+#     rev: v1.0.0
+#     hooks:
+#       - id: invigil-layout
+#       - id: invigil-secrets
+#
+# Both are offline and fast (<500ms) — safe to run on every commit.
+- id: invigil-layout
+  name: "Invigil — layout (offline)"
+  description: "Fail if LICENSE / README / quickstart / .env.example basics are missing."
+  entry: invigil check layout
+  language: python
+  pass_filenames: false
+  always_run: true
+- id: invigil-secrets
+  name: "Invigil — secrets (offline)"
+  description: "Fail if a private key or a tracked .env is committed to git."
+  entry: invigil check secrets
+  language: python
+  pass_filenames: false
+  always_run: true

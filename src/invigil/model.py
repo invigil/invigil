@@ -38,7 +38,12 @@ GATE_TITLES = {
 @dataclass
 class Check:
     """A single doctrine check. `gate` is the highest gate this check gates on;
-    `mandatory` checks must pass for that gate to be considered reached."""
+    `mandatory` checks must pass for that gate to be considered reached.
+
+    `layer` decides *when* a check runs — `local` (offline, fast, pre-commit),
+    `network` (needs the internet), or `heavy` (boots artifacts). `group` is the
+    human-facing bundle (`layout`, `secrets`, `supply-chain`, `ai`, ...) selected
+    by `invigil check <group>`."""
 
     id: str
     gate: str
@@ -46,6 +51,8 @@ class Check:
     weight: int = 1
     mandatory: bool = True
     discipline: str = ""  # D1..D5, for grouping in the report
+    layer: str = "local"  # local | network | heavy
+    group: str = ""  # layout | secrets | errors | supply-chain | evidence | doors | ai
 
 
 @dataclass

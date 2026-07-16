@@ -7,6 +7,11 @@
   "additionalProperties": false,
   "properties": {
     "version": { "type": "integer", "enum": [1] },
+    "profile": {
+      "type": "string",
+      "enum": ["strict", "progressive", "light"],
+      "description": "Baseline posture: strict (enforce at G4), progressive (report-first, fail_on G3), light (local-only, advisory)."
+    },
     "project": {
       "type": "object",
       "additionalProperties": false,
@@ -25,6 +30,27 @@
           "type": "array",
           "items": { "type": "string" },
           "description": "Check ids to skip (justify each in a comment)."
+        },
+        "optional": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Check ids to force non-mandatory (they ding the grade but don't collapse a gate)."
+        },
+        "weights": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" },
+          "description": "Per-check weight overrides, keyed by check id."
+        },
+        "thresholds": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fail_on": {
+              "type": "string",
+              "pattern": "^G[1-7]$",
+              "description": "Hard-fail at/below this gate; report-only above it."
+            }
+          }
         }
       }
     },

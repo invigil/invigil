@@ -16,21 +16,40 @@ from __future__ import annotations
 
 import argparse
 import sys
+from dataclasses import replace
 from pathlib import Path
 
-from . import __version__
+from . import __version__, engine
+from .checks import GROUPS, LAYERS
 from .config import InvigilConfig
 from .context import Context
-from .model import GATES, Scorecard
+from .model import GATES, Scorecard, Status
 from .report import RENDERERS
 
 
-def score(path: Path) -> tuple[Scorecard, InvigilConfig]:
+def score(
+    path: Path,
+    *,
+    only_layers: set[str] | None = None,
+    only_groups: set[str] | None = None,
+    offline: bool | None = None,
+    profile: str | None = None,
+) -> tuple[Scorecard, InvigilConfig]:
+    """Score `path`. `only_layers`/`offline` = None means "defer to the repo's
+    profile"; an explicit value overrides it (e.g. a CLI flag)."""
     from .checks import run_all  # imported here so registration happens once
 
     config = InvigilConfig.load(path)
+    if profile:
+        config.profile = profile
+    eff = engine.resolve(config)
+    layers = eff.only_layers if only_layers is None else only_layers
+    off = eff.offline if offline is None else offline
     ctx = Context(repo=path, config=config)
-    sc = Scorecard(repo=config.name or path.name, results=run_all(ctx))
+    results = run_all(ctx, only_layers=layers, only_groups=only_groups, offline=off)
+    # Apply per-check weight/mandatory overrides without mutating the registry.
+    results = [replace(r, check=eff.adjust(r.check)) for r in results]
+    sc = Scorecard(repo=config.name or path.name, results=results)
     return sc, config
 
 
@@ -52,6 +71,15 @@ def main(argv: list[str] | None = None) -> int:
     sc_cmd.add_argument("--min-gate", default=None, help="override target gate (e.g. G4)")
     sc_cmd.add_argument("--enforce", action="store_true", help="exit non-zero if below the target gate")
     sc_cmd.add_argument("--output", help="write to FILE instead of stdout")
+    sc_cmd.add_argument("--offline", action="store_true", help="skip network checks (no internet access)")
+    sc_cmd.add_argument("--layer", action="append", choices=LAYERS, help="only run this layer (repeatable)")
+    sc_cmd.add_argument("--group", action="append", choices=GROUPS, help="only run this group (repeatable)")
+    sc_cmd.add_argument("--profile", choices=list(engine.PROFILES), help="override the .invigil.yml profile")
+
+    ck_cmd = sub.add_parser("check", help="run one check group, offline (fast — for pre-commit)")
+    ck_cmd.add_argument("group", choices=GROUPS, help="the check group to run")
+    ck_cmd.add_argument("path", nargs="?", default=".", help="repo path (default: .)")
+    ck_cmd.add_argument("--online", action="store_true", help="allow this group's network checks to run")
 
     st_cmd = sub.add_parser("stranger", help="boot published artifacts and probe them (Layer 2)")
     st_cmd.add_argument("path", nargs="?", default=".", help="repo path holding .invigil.yml (default: .)")
@@ -68,19 +96,40 @@ def main(argv: list[str] | None = None) -> int:
         if not repo.exists():
             print(f"invigil: path not found: {repo}", file=sys.stderr)
             return 2
-        sc, config = score(repo)
+        sc, config = score(
+            repo,
+            only_layers=set(args.layer) if args.layer else None,
+            only_groups=set(args.group) if args.group else None,
+            offline=True if args.offline else None,
+            profile=args.profile,
+        )
         rendered = RENDERERS[args.format](sc)
         if args.output:
             Path(args.output).write_text(rendered + "\n")
         else:
             print(rendered)
 
-        target = args.min_gate or config.min_gate
-        enforce = args.enforce or config.enforce
-        if enforce and not _gate_ge(sc.gate_level(), target):
+        eff = engine.resolve(config)
+        target = args.min_gate or eff.fail_on or config.min_gate
+        enforce = args.enforce or config.enforce or config.profile == "strict"
+        if enforce and target and not _gate_ge(sc.gate_level(), target):
             print(f"invigil: gate {sc.gate_level()} is below target {target}", file=sys.stderr)
             return 1
         return 0
+
+    if args.cmd == "check":
+        repo = Path(args.path).resolve()
+        if not repo.exists():
+            print(f"invigil: path not found: {repo}", file=sys.stderr)
+            return 2
+        # A group run is offline-by-default (pre-commit speed); --online opts in.
+        sc, _ = score(repo, only_groups={args.group}, offline=not args.online)
+        fails = sc.failures()
+        for r in fails:
+            print(f"FAIL [{args.group}] {r.check.title}\n      why: {r.detail}\n      fix: {r.fix}")
+        passed = sum(1 for r in sc.results if r.status == Status.PASS)
+        print(f"invigil check {args.group}: {passed} passed, {len(fails)} failing")
+        return 1 if fails else 0
 
     if args.cmd == "stranger":
         from .stranger import StrangerError, run

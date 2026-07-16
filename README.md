@@ -120,6 +120,31 @@ probes:
 boot_budget_minutes: 10
 ```
 
+## Lightweight & modular
+
+A gate developers bypass is dead weight, so Invigil is built for zero friction:
+
+- **Fast offline groups for pre-commit** — each check is tagged `local`/`network`/`heavy`.
+  `invigil check layout` runs the filesystem checks with no network in ~120ms:
+
+  ```yaml
+  # .pre-commit-config.yaml
+  - repo: https://github.com/rrskris/invigil
+    rev: v1.0.0
+    hooks: [{ id: invigil-layout }, { id: invigil-secrets }]
+  ```
+
+  Heavier, network-bound checks (`scorecard`, the Stranger Gate) stay in CI.
+  `invigil score --offline` / `--layer local` / `--group supply-chain` slice it any way.
+- **Profiles, so it bends instead of forking.** `profile: strict | progressive | light`, plus
+  per-check `weights`, `optional` (ding without gating), and `thresholds.fail_on`. Make it your
+  doctrine, not a hardcoded one.
+- **Resilient by design.** A scorecard.dev timeout is a SKIP that's excluded from the grade —
+  never a false A-to-C downgrade, never a crashed build.
+- **AI-era native.** The `ai` group checks that your `llms.txt`/`AGENTS.md` leak no secrets and
+  that agent code declares its tool inventory — the first slice of "what's the blast radius if
+  this agent is prompt-injected?"
+
 ## The doctrine
 
 Invigil encodes a specific product-quality doctrine (the Silent User Doctrine and its Five

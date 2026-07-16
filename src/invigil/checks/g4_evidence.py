@@ -50,8 +50,12 @@ def scorecard_score(ctx: Context) -> CheckResult:
         url = f"https://api.scorecard.dev/projects/github.com/{slug}"
         with urllib.request.urlopen(url, timeout=8) as resp:  # noqa: S310 (fixed https host)
             score = float(json.load(resp).get("score", 0))
-    except (urllib.error.URLError, ValueError, TimeoutError, OSError):
-        return CheckResult(check, Status.SKIP, "scorecard.dev has no published score yet")
+    except (urllib.error.URLError, TimeoutError, OSError):
+        # Network flake / not published yet: SKIP (excluded from the grade) so a
+        # timeout can never move the score. Resilience over a spurious downgrade.
+        return CheckResult(check, Status.SKIP, "scorecard.dev unreachable — excluded from grade")
+    except ValueError:
+        return CheckResult(check, Status.SKIP, "scorecard.dev returned no score yet")
     if score >= SCORECARD_MIN:
         return CheckResult(check, Status.PASS, f"score {score}")
     return CheckResult(
