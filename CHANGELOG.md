@@ -4,6 +4,22 @@ All notable changes to Invigil are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-07-18
+
+### Added
+- **`invigil fix` engine** — `score`/`check` gain `--fix`, which applies mechanical
+  corrections for failing checks and stages them. Turns Invigil from a gate into a
+  proactive fixer.
+  - **Safe mutation broker** (`mutator.py`): fixes return structured `Mutation`
+    intents (`create_file` / `append_file` / `replace_string` / `delete_file`) — never
+    shell — and the broker path-jails every write inside the repo and logs it.
+  - **Single-pass rule:** after a fix runs, its one check is re-run; a second failure is
+    flagged unresolved instead of looping.
+  - **CI-lockout:** `--fix` hard-errors (exit 3) when `CI` is set, so it can't trigger
+    cascading automated commits on a protected branch.
+  - Ships fixes for the missing-governance-file checks (SECURITY.md, CONTRIBUTING.md,
+    CODE_OF_CONDUCT.md, CHANGELOG.md, dependabot.yml, docs/README.md, AGENTS.md).
+
 ## [1.1.0] - 2026-07-16
 
 ### Added
@@ -43,5 +59,6 @@ All notable changes to Invigil are documented here. Format follows
 - **AI-native group (`ai`):** `llms-no-secrets` and `agent-scope-visibility` — the
   statically-honest first slice of "agent blast radius".
 
+[1.2.0]: https://github.com/invigil/invigil/releases/tag/v1.2.0
 [1.1.0]: https://github.com/invigil/invigil/releases/tag/v1.1.0
 [1.0.0]: https://github.com/invigil/invigil/releases/tag/v1.0.0

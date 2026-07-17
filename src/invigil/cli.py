@@ -5,8 +5,9 @@
 
 Exit codes:
     0  scorecard produced; gate satisfied (or report-only mode)
-    1  --enforce (or config enforce=true) and the repo is below its min gate
+    1  --enforce (or config enforce=true) and below the min gate; or `--fix` changed files
     2  usage / IO error
+    3  `--fix` refused because it's running under CI (CI-lockout)
 
 Report-first is the default: without --enforce the command always exits 0, so
 it can be wired into CI as a comment-and-badge step before it ever blocks a PR.
@@ -60,6 +61,27 @@ def _gate_ge(reached: str, target: str) -> bool:
     return GATES.index(reached) >= GATES.index(target)
 
 
+def _run_fixes(repo: Path, config: InvigilConfig, results: list) -> bool | None:
+    """Apply fixes for failing checks and stage them. Returns True if any file
+    changed, False if nothing changed, or None if refused under CI (caller exits 3)."""
+    from .fixer import apply_fixes, ci_active
+
+    if ci_active():
+        print("invigil: --fix is disabled under CI (CI-lockout) — run it locally", file=sys.stderr)
+        return None
+    ctx = Context(repo=repo, config=config)
+    rep = apply_fixes(ctx, results)
+    if rep.changed_files:
+        ctx.git("add", *rep.changed_files)
+    if rep.fixed:
+        print(f"fixed: {', '.join(rep.fixed)}")
+    if rep.unresolved:
+        print(f"unresolved (fix ran, still failing): {', '.join(rep.unresolved)}", file=sys.stderr)
+    if rep.changed_files:
+        print(f"changed + staged: {', '.join(rep.changed_files)}")
+    return rep.changed
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="invigil", description="Grade a repo against the quality doctrine.")
     parser.add_argument("--version", action="version", version=f"invigil {__version__}")
@@ -75,11 +97,13 @@ def main(argv: list[str] | None = None) -> int:
     sc_cmd.add_argument("--layer", action="append", choices=LAYERS, help="only run this layer (repeatable)")
     sc_cmd.add_argument("--group", action="append", choices=GROUPS, help="only run this group (repeatable)")
     sc_cmd.add_argument("--profile", choices=list(engine.PROFILES), help="override the .invigil.yml profile")
+    sc_cmd.add_argument("--fix", action="store_true", help="apply available fixes for failing checks, then re-score")
 
     ck_cmd = sub.add_parser("check", help="run one check group, offline (fast — for pre-commit)")
     ck_cmd.add_argument("group", choices=GROUPS, help="the check group to run")
     ck_cmd.add_argument("path", nargs="?", default=".", help="repo path (default: .)")
     ck_cmd.add_argument("--online", action="store_true", help="allow this group's network checks to run")
+    ck_cmd.add_argument("--fix", action="store_true", help="apply fixes for failing checks and stage them")
 
     st_cmd = sub.add_parser("stranger", help="boot published artifacts and probe them (Layer 2)")
     st_cmd.add_argument("path", nargs="?", default=".", help="repo path holding .invigil.yml (default: .)")
@@ -97,13 +121,18 @@ def main(argv: list[str] | None = None) -> int:
         if not repo.exists():
             print(f"invigil: path not found: {repo}", file=sys.stderr)
             return 2
-        sc, config = score(
-            repo,
+        score_kwargs = dict(
             only_layers=set(args.layer) if args.layer else None,
             only_groups=set(args.group) if args.group else None,
             offline=True if args.offline else None,
             profile=args.profile,
         )
+        sc, config = score(repo, **score_kwargs)
+        if args.fix:
+            changed = _run_fixes(repo, config, sc.results)
+            if changed is None:
+                return 3
+            sc, config = score(repo, **score_kwargs)  # re-score to reflect fixes
         rendered = RENDERERS[args.format](sc)
         if args.output:
             Path(args.output).write_text(rendered + "\n")
@@ -124,13 +153,22 @@ def main(argv: list[str] | None = None) -> int:
             print(f"invigil: path not found: {repo}", file=sys.stderr)
             return 2
         # A group run is offline-by-default (pre-commit speed); --online opts in.
-        sc, _ = score(repo, only_groups={args.group}, offline=not args.online)
+        changed = False
+        sc, config = score(repo, only_groups={args.group}, offline=not args.online)
+        if args.fix and sc.failures():
+            result = _run_fixes(repo, config, sc.results)
+            if result is None:
+                return 3
+            changed = result
+            sc, config = score(repo, only_groups={args.group}, offline=not args.online)
         fails = sc.failures()
         for r in fails:
             print(f"FAIL [{args.group}] {r.check.title}\n      why: {r.detail}\n      fix: {r.fix}")
         passed = sum(1 for r in sc.results if r.status == Status.PASS)
         print(f"invigil check {args.group}: {passed} passed, {len(fails)} failing")
-        return 1 if fails else 0
+        if fails:
+            return 1
+        return 1 if changed else 0  # pre-commit: files were fixed+staged, re-commit
 
     if args.cmd == "stranger":
         from .stranger import StrangerError, run

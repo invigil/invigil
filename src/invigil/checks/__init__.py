@@ -14,8 +14,12 @@ from collections.abc import Callable
 
 from ..context import Context
 from ..model import Check, CheckResult, Status
+from ..mutator import Mutation
 
 REGISTRY: list[tuple[Check, Callable[[Context], CheckResult]]] = []
+
+# check id -> a fix that returns the mutations which should make the check pass.
+FIXES: dict[str, Callable[[Context], list[Mutation]]] = {}
 
 
 def register(**meta):
@@ -30,6 +34,26 @@ def register(**meta):
         return fn
 
     return wrap
+
+
+def fix(check_id: str):
+    """Decorator: register a fix for a check id. The fix returns the mutations
+    that should make that check pass; the fix engine applies them, then re-runs
+    the one check (the single-pass rule)."""
+
+    def wrap(fn: Callable[[Context], list[Mutation]]) -> Callable[[Context], list[Mutation]]:
+        FIXES[check_id] = fn
+        return fn
+
+    return wrap
+
+
+def run_one(ctx: Context, check_id: str) -> CheckResult | None:
+    """Run a single check by id — used to re-verify after a fix (single-pass)."""
+    for check, fn in REGISTRY:
+        if check.id == check_id:
+            return fn(ctx)
+    return None
 
 
 def run_all(
@@ -76,6 +100,7 @@ from . import (  # noqa: E402,F401
     g5_doors,
     tier1_secrets,
 )
+from . import fixes as fixes  # noqa: E402,F401  (registers @fix handlers)
 
 # Central layer/group tagging — one place to maintain, so the 20+ `@register`
 # call sites stay clean. id -> (layer, group). Anything unlisted keeps the Check
