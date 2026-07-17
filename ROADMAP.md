@@ -21,11 +21,12 @@ its own doctrine, so each phase is expected to hold or raise Invigil's own gate 
 - **Supply chain** — cosign-signed wheel / sdist / GHCR image + SPDX SBOM; four distribution
   channels (PyPI / Action / Docker / pre-commit); moving `v1` tag maintained per release.
 
-## Phase A — the `invigil fix` engine ⬜ (next)
+## Phase A — the `invigil fix` engine ✅ (shipped v1.2.0)
 
-Turn the gate into a proactive fixer. `src/invigil/mutator.py` (safe create/append/replace/delete
-broker, every change logged), a `fix_callback` per check, a `--fix` CLI flag, the **single-pass
-rule**, and **CI-lockout** (`--fix` hard-errors when `CI=true`). Self-contained; no registry break.
+Turned the gate into a proactive fixer. `src/invigil/mutator.py` (safe create/append/replace/delete
+broker, path-jailed + logged), `checks.FIXES` (fixes for the missing-governance-file checks),
+`fixer.py` (the **single-pass rule**), a `--fix` flag on `score`/`check`, and **CI-lockout**
+(`--fix` exits 3 when `CI=true`). Self-contained; no registry break.
 
 ## Phase B — plugin architecture (pluggy) ⬜
 

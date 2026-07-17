@@ -47,10 +47,10 @@ invigil/invigil/
 │   │   └── self-score.yml       # 🟡 (today: a `self-score` job inside ci.yml)
 │   └── ISSUE_TEMPLATE/          # ⬜
 ├── src/invigil/
-│   ├── cli.py               # ✅ arg parsing, context flags (--offline; --fix ⬜)
+│   ├── cli.py               # ✅ arg parsing, context flags (--offline, --fix)
 │   ├── hookspecs.py         # ⬜ extension boundaries via pluggy
 │   ├── manager.py           # ⬜ plugin discovery, sorting, runtime registry
-│   ├── mutator.py           # ⬜ safe file-system mutation broker for the fix engine
+│   ├── mutator.py           # ✅ safe file-system mutation broker for the fix engine
 │   ├── gates/               # 🟡 (today: checks/ modules, @register + central TAGS)
 │   └── profiles/            # 🟡 (today: presets live in engine.py; externalize to *.json)
 ├── schema/invigil.schema.json   # ✅ validation contract for .invigil.yml
@@ -140,7 +140,7 @@ offline in ~120 ms; `additional_dependencies` plugin injection is planned with �
 
 ---
 
-## 5. The `invigil fix` engine (⬜ planned — Phase A)
+## 5. The `invigil fix` engine (✅ shipped v1.2.0 — Phase A)
 
 Shifts Invigil from an enforcement gate into a proactive correction tool. Evaluation is separated
 from mutation to protect developers from destructive behavior.
