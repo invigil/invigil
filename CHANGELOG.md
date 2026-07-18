@@ -4,11 +4,20 @@ All notable changes to Invigil are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
-## [1.3.0] - 2026-07-18
+## [1.3.1] - 2026-07-18
 
-> **Note:** this is the first release published since 1.0.0. The 1.1.0 and 1.2.0
-> changes below were merged to `main` but never tagged or published; their
-> artifacts (including the Docker image) first ship with this release.
+### Fixed
+- Release pipeline: `cosign sign-blob` updated for cosign v3's bundle format
+  (`--bundle *.sigstore.json`); the v1.3.0 release run published to PyPI but
+  failed at signing, so 1.3.0 on PyPI is unsigned and shipped no Docker image
+  or GitHub Release. 1.3.1 is the first fully signed release since 1.0.0.
+- Source formatting drift that failed CI's `ruff format --check`.
+
+## [1.3.0] - 2026-07-18 (PyPI only, unsigned — superseded by 1.3.1)
+
+> **Note:** first version published since 1.0.0. The 1.1.0 and 1.2.0 changes
+> below were merged to `main` but never tagged or published; their artifacts
+> first ship with 1.3.x (the Docker image and signatures with 1.3.1).
 
 ### Added
 - **Structured plugin architecture**: Invigil now supports local-first project plugins via `.invigil/plugins/*.py`. Drop a script exporting `invigil_register_check()` and it seamlessly integrates into the scorecard.
@@ -80,7 +89,8 @@ All notable changes to Invigil are documented here. Format follows
 - **AI-native group (`ai`):** `llms-no-secrets` and `agent-scope-visibility` — the
   statically-honest first slice of "agent blast radius".
 
-[1.3.0]: https://github.com/invigil/invigil/releases/tag/v1.3.0
+[1.3.1]: https://github.com/invigil/invigil/releases/tag/v1.3.1
+[1.3.0]: https://github.com/invigil/invigil/compare/v1.0.0...v1.3.0
 [1.2.0]: https://github.com/invigil/invigil/compare/v1.0.0...v1.3.0
 [1.1.0]: https://github.com/invigil/invigil/compare/v1.0.0...v1.3.0
 [1.0.0]: https://github.com/invigil/invigil/releases/tag/v1.0.0

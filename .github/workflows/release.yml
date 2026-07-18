@@ -54,10 +54,15 @@ jobs:
       - name: Install cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6  # v4.1.2
 
+      # cosign v3 only emits the new bundle format; --output-signature/.pem are
+      # ignored. Verify with:
+      #   cosign verify-blob --bundle <f>.sigstore.json \
+      #     --certificate-identity-regexp 'github.com/invigil/invigil' \
+      #     --certificate-oidc-issuer https://token.actions.githubusercontent.com <f>
       - name: Sign the wheel, sdist, and SBOM (keyless)
         run: |
           for f in dist/* invigil.spdx.json; do
-            cosign sign-blob --yes "$f" --output-signature "$f.sig" --output-certificate "$f.pem"
+            cosign sign-blob --yes "$f" --bundle "$f.sigstore.json"
           done
 
       # Plain docker CLI, no marketplace actions — same "shell out, never SDK"
@@ -84,6 +89,7 @@ jobs:
           files: |
             dist/*
             invigil.spdx.json
+            invigil.spdx.json.sigstore.json
           generate_release_notes: true
 
       # Keep the `invigil/invigil@v1` tag and `rev: v1` pointing at the newest
