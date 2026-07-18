@@ -15,6 +15,16 @@ from pathlib import Path
 CONFIG_NAMES = (".invigil.yml", ".invigil.yaml")
 
 
+def _check_id_list(value: object) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, dict):
+        return [str(check_id) for check_id in value]
+    if isinstance(value, list):
+        return [str(check_id) for check_id in value]
+    return [str(value)]
+
+
 @dataclass
 class InvigilConfig:
     name: str = ""
@@ -51,7 +61,7 @@ class InvigilConfig:
             min_gate=project.get("min_gate", "G4"),
             enforce=bool(project.get("enforce", False)),
             profile=data.get("profile", "progressive"),
-            disabled_checks=list(checks.get("disable", [])),
+            disabled_checks=_check_id_list(checks.get("disable")),
             optional_checks=list(checks.get("optional", [])),
             weights={str(k): int(v) for k, v in (checks.get("weights") or {}).items()},
             fail_on=thresholds.get("fail_on"),
