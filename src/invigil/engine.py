@@ -11,10 +11,15 @@ are never mutated.
 
 from __future__ import annotations
 
+import importlib.resources
+import json
+import logging
 from dataclasses import dataclass, replace
 
 from .config import InvigilConfig
 from .model import Check
+
+log = logging.getLogger(__name__)
 
 # profile -> (only_layers, offline, default fail_on, all-checks-advisory)
 PROFILES: dict[str, tuple[set[str] | None, bool, str | None, bool]] = {
@@ -23,6 +28,29 @@ PROFILES: dict[str, tuple[set[str] | None, bool, str | None, bool]] = {
     "light": ({"local"}, True, None, True),
 }
 DEFAULT_PROFILE = "progressive"
+
+
+def _load_profiles_json():
+    try:
+        from . import profiles
+
+        # Use importlib.resources.files for Python 3.9+ compatibility
+        for resource in importlib.resources.files(profiles).iterdir():
+            if resource.name.endswith(".json"):
+                data = json.loads(resource.read_text())
+                name = resource.name[:-5]
+                layers = set(data["only_layers"]) if data.get("only_layers") else None
+                PROFILES[name] = (
+                    layers,
+                    bool(data.get("offline", False)),
+                    data.get("fail_on"),
+                    bool(data.get("advisory_all", False)),
+                )
+    except Exception as exc:
+        log.warning("failed to load JSON profiles: %s", exc)
+
+
+_load_profiles_json()
 
 
 @dataclass
