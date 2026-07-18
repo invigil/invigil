@@ -17,3 +17,9 @@ htmlcov/
 .vscode/
 .idea/
 .DS_Store
+
+# Local AI-assistant session files — never publish
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.mcp.json
