@@ -55,9 +55,13 @@ def code_of_conduct(ctx: Context) -> CheckResult:
 )
 def operator_door(ctx: Context) -> CheckResult:
     check = operator_door.__invigil__  # type: ignore[attr-defined]
-    has = ctx.first_existing("docs/api.md", "docs/configuration.md", "openapi.json", "openapi.yaml") or bool(
-        ctx.rglob("**/openapi*.json") or ctx.rglob("**/openapi*.yaml")
-    )
+    has = ctx.first_existing(
+        "docs/api.md",
+        "docs/cli-reference.md",
+        "docs/configuration.md",
+        "openapi.json",
+        "openapi.yaml",
+    ) or bool(ctx.rglob("**/openapi*.json") or ctx.rglob("**/openapi*.yaml"))
     if has:
         return CheckResult(check, Status.PASS, "API/CLI reference present")
     return CheckResult(

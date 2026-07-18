@@ -107,12 +107,13 @@ from . import fixes as fixes  # noqa: E402,F401  (registers @fix handlers)
 # defaults (local, "").
 TAGS: dict[str, tuple[str, str]] = {
     # layout (G1 stranger-readiness)
+    "license-present": ("local", "layout"),
     "license-apache2": ("local", "layout"),
     "readme-present": ("local", "layout"),
     "readme-length": ("local", "layout"),
     "readme-quickstart": ("local", "layout"),
     "env-example": ("local", "layout"),
-    # secrets (Tier-1)
+    # secrets (secret hygiene)
     "no-tracked-secrets": ("local", "secrets"),
     "gitleaks-clean": ("local", "secrets"),
     # errors (G2)

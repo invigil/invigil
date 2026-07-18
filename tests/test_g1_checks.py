@@ -18,13 +18,21 @@ def ctx(tmp_path: Path) -> Context:
 
 def test_license_pass(tmp_path):
     (tmp_path / "LICENSE").write_text(APACHE)
+    assert g1.license_present(ctx(tmp_path)).status is Status.PASS
     assert g1.license_apache2(ctx(tmp_path)).status is Status.PASS
 
 
 def test_license_missing_fails_with_fix(tmp_path):
-    r = g1.license_apache2(ctx(tmp_path))
+    # license-present is the mandatory check; license-apache2 SKIPs when no file exists
+    r = g1.license_present(ctx(tmp_path))
     assert r.status is Status.FAIL
     assert r.fix  # D2: a failing check must tell you how to fix it
+
+
+def test_license_apache2_skips_when_no_file(tmp_path):
+    # When no LICENSE file exists, license-apache2 defers to license-present (SKIP)
+    r = g1.license_apache2(ctx(tmp_path))
+    assert r.status is Status.SKIP
 
 
 def test_license_wrong_kind_fails(tmp_path):
@@ -49,7 +57,7 @@ def test_env_example_skips_when_no_surface(tmp_path):
     assert g1.env_example(ctx(tmp_path)).status is Status.SKIP
 
 
-@pytest.mark.parametrize("fn", [g1.license_apache2, g1.readme_length, g1.readme_quickstart])
+@pytest.mark.parametrize("fn", [g1.license_present, g1.license_apache2, g1.readme_length, g1.readme_quickstart])
 def test_all_failures_have_fixes(tmp_path, fn):
     # empty repo -> everything that can fail, fails, and every failure has a fix
     r = fn(ctx(tmp_path))

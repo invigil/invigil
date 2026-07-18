@@ -32,7 +32,7 @@ def test_json_is_valid_and_keyed():
 
 def test_markdown_has_failure_table():
     md = report.as_markdown(_sc())
-    assert "| Gate | Check | Why | Fix |" in md
+    assert "| Gate | Check | Effort | Why | Fix |" in md
     assert "split into docs/" in md
 
 

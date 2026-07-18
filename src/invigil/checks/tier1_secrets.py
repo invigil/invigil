@@ -1,10 +1,9 @@
-"""G1 (Tier-1) — no secrets in the tree (a hard prerequisite for anything public).
+"""G1 — secret hygiene (a hard prerequisite for any public repo).
 
-A tracked private key or committed .env is an instant, non-negotiable failure —
-the OSS-LAUNCH-CHECKLIST flagged exactly this on two repos. The tracked-file scan
-is cheap and always runs; a full gitleaks history scan runs when the binary is
-available and otherwise degrades to SKIP (so absence of the tool never masquerades
-as a pass).
+A tracked private key or committed .env is an instant, non-negotiable failure.
+The tracked-file scan is cheap and always runs; a full gitleaks history scan runs
+when the binary is available and otherwise degrades to SKIP (so absence of the
+tool never masquerades as a pass).
 """
 
 from __future__ import annotations
@@ -22,7 +21,14 @@ SECRET_EXACT = (".env",)  # .env.example / .env.sample are fine
 ALLOW_SUFFIXES = (".pub",)  # public keys are not secrets
 
 
-@register(id="no-tracked-secrets", gate="G1", title="No secrets tracked in git", weight=2, discipline="D1")
+@register(
+    id="no-tracked-secrets",
+    gate="G1",
+    title="No secrets tracked in git",
+    weight=2,
+    discipline="D1",
+    severity="blocker",  # a tracked secret blocks the gate regardless of other scores
+)
 def no_tracked_secrets(ctx: Context) -> CheckResult:
     check = no_tracked_secrets.__invigil__  # type: ignore[attr-defined]
     files = ctx.tracked_files()

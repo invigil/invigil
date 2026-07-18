@@ -1,4 +1,4 @@
-"""G1 — a stranger succeeds in 10 minutes on a clean machine (Discipline D1).
+"""G1 — a stranger succeeds in 10 minutes on a clean machine.
 
 These are the "is this even approachable?" checks: a real license, a landing-page
 README that stays a landing page, a copy-paste quickstart, and an env-var config
@@ -15,12 +15,49 @@ from . import register
 README_MAX_LINES = 300
 
 
-@register(id="license-apache2", gate="G1", title="LICENSE present and Apache-2.0", weight=2, discipline="D1")
-def license_apache2(ctx: Context) -> CheckResult:
+@register(
+    id="license-present",
+    gate="G1",
+    title="LICENSE file exists",
+    weight=2,
+    mandatory=True,
+    discipline="D1",
+)
+def license_present(ctx: Context) -> CheckResult:
+    """Mandatory: every OSS project needs *some* license.
+    Which license is advisory — see license-apache2 (non-mandatory).
+    """
+    check = license_present.__invigil__  # type: ignore[attr-defined]
     p = ctx.first_existing("LICENSE", "LICENSE.txt", "LICENSE.md")
+    if p is not None:
+        return CheckResult(check, Status.PASS, f"{p.name} present")
+    return CheckResult(
+        check,
+        Status.FAIL,
+        "no LICENSE file",
+        "add a LICENSE file at repo root — without one the repo is All Rights Reserved by default",
+    )
+
+
+@register(
+    id="license-apache2",
+    gate="G1",
+    title="LICENSE is Apache-2.0 (advisory)",
+    weight=1,
+    mandatory=False,
+    discipline="D1",
+)
+def license_apache2(ctx: Context) -> CheckResult:
+    """Advisory: flags when the license is not Apache-2.0.
+    MIT, GPL, MPL repos see this as a ding, never a gate failure.
+    To enforce Apache-2.0, promote via .invigil.yml:
+      checks:
+        weights: { license-apache2: 3 }
+    """
     check = license_apache2.__invigil__  # type: ignore[attr-defined]
+    p = ctx.first_existing("LICENSE", "LICENSE.txt", "LICENSE.md")
     if p is None:
-        return CheckResult(check, Status.FAIL, "no LICENSE file", "add an Apache-2.0 LICENSE at repo root")
+        return CheckResult(check, Status.SKIP, "no LICENSE file (checked by license-present)")
     text = p.read_text(errors="replace")
     if "Apache License" in text and "Version 2.0" in text:
         return CheckResult(check, Status.PASS, f"{p.name}: Apache-2.0")
@@ -28,7 +65,8 @@ def license_apache2(ctx: Context) -> CheckResult:
         check,
         Status.FAIL,
         f"{p.name} is not Apache-2.0",
-        "replace with the Apache-2.0 text (project standard); see https://apache.org/licenses/LICENSE-2.0.txt",
+        "optional: switch to Apache-2.0 for maximum OSS compatibility; "
+        "see https://apache.org/licenses/LICENSE-2.0.txt",
     )
 
 
@@ -44,7 +82,7 @@ def readme_present(ctx: Context) -> CheckResult:
 @register(
     id="readme-length",
     gate="G1",
-    title=f"README <= {README_MAX_LINES} lines (landing page, not the building)",
+    title=f"README <= {README_MAX_LINES} lines (landing page, not the docs)",
     weight=1,
     discipline="D1",
 )
@@ -60,7 +98,7 @@ def readme_length(ctx: Context) -> CheckResult:
         check,
         Status.FAIL,
         f"{n} lines (> {README_MAX_LINES})",
-        f"move deep sections into doc/ and link them; target <= {README_MAX_LINES} lines",
+        f"move deep sections into docs/ and link them; target <= {README_MAX_LINES} lines",
     )
 
 
@@ -90,12 +128,6 @@ def env_example(ctx: Context) -> CheckResult:
     check = env_example.__invigil__  # type: ignore[attr-defined]
     if ctx.first_existing(".env.example", ".env.sample", ".env.template"):
         return CheckResult(check, Status.PASS, ".env.example present")
-    # Only fail if the repo clearly reads runtime env config: a compose file, or
-    # source that actually pulls from the environment. A `config.py` that parses a
-    # local YAML is NOT a runtime env surface — don't false-positive on it.
-    # Match call sites, not bare identifiers. Skip Invigil's own package source
-    # (which names these patterns) — a scanned app never contains it except when
-    # Invigil grades itself, so this only prevents a self-trigger.
     env_patterns = ("os.getenv(", "os.environ[", "os.environ.get", "(BaseSettings)")
     reads_env = any(
         m in p.read_text(errors="replace")

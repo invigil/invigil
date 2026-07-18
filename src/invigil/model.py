@@ -34,6 +34,18 @@ GATE_TITLES = {
     "G7": "Cited/integrated by projects you don't control",
 }
 
+# Short human-readable subtitles for shields.io badges — readable at a glance
+# without knowing the gate numbering system.
+GATE_SHORT_TITLES = {
+    "G1": "stranger-ready",
+    "G2": "errors actionable",
+    "G3": "artifact verified daily",
+    "G4": "supply chain public",
+    "G5": "all five doors open",
+    "G6": "first contributor merged",
+    "G7": "externally cited",
+}
+
 
 @dataclass
 class Check:
@@ -43,7 +55,17 @@ class Check:
     `layer` decides *when* a check runs — `local` (offline, fast, pre-commit),
     `network` (needs the internet), or `heavy` (boots artifacts). `group` is the
     human-facing bundle (`layout`, `secrets`, `supply-chain`, `ai`, ...) selected
-    by `invigil check <group>`."""
+    by `invigil check <group>`.
+
+    `effort` is an advisory estimate of how long the fix takes: `minutes` (drop
+    in a file), `hours` (CI config change, dependency update), or `days` (OpenSSF
+    Scorecard improvements, growing a contributor community). Reports sort failures
+    by effort so teams see quick wins first.
+
+    `severity` of `blocker` means this check FAILing hard-stops the gate at `—`
+    regardless of weighted score — a leaked secret or missing LICENSE cannot be
+    papered over by 20 advisory passes.
+    """
 
     id: str
     gate: str
@@ -53,6 +75,8 @@ class Check:
     discipline: str = ""  # D1..D5, for grouping in the report
     layer: str = "local"  # local | network | heavy
     group: str = ""  # layout | secrets | errors | supply-chain | evidence | doors | ai
+    effort: str = "hours"  # minutes | hours | days
+    severity: str = "standard"  # standard | blocker
 
 
 @dataclass
@@ -87,12 +111,16 @@ class Scorecard:
     def gate_level(self) -> str:
         """Highest contiguous gate whose mandatory checks all pass.
 
+        Blocker checks (severity='blocker') that FAIL short-circuit the entire
+        gate to '—' regardless of weighted score — a leaked secret or missing
+        LICENSE cannot be papered over by advisory passes.
+
         Capped at the highest gate that actually has a check in the registry:
-        a gate with no evidence is never *awarded* by pass-through. This keeps
-        G6/G7 (contributor merged, cited by others — not mechanically checkable)
-        out of reach of the automated scorecard, and keeps a partial registry
-        honest instead of reporting a spurious G7.
+        a gate with no evidence is never *awarded* by pass-through.
         """
+        # Blocker short-circuit: any blocker FAIL → gate is undefined
+        if any(r.status == Status.FAIL and r.check.severity == "blocker" for r in self.results):
+            return "—"
         defined = {r.check.gate for r in self.results}
         if not defined:
             return "—"
