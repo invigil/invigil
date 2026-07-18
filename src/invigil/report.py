@@ -82,9 +82,7 @@ def as_markdown(sc: Scorecard) -> str:
     if failures:
         out += ["| Gate | Check | Effort | Why | Fix |", "|---|---|---|---|---|"]
         for r in failures:
-            out.append(
-                f"| {r.check.gate} | {r.check.title} | {r.check.effort or '—'} | {r.detail} | {r.fix} |"
-            )
+            out.append(f"| {r.check.gate} | {r.check.title} | {r.check.effort or '—'} | {r.detail} | {r.fix} |")
         out.append("")
     else:
         out += ["All doctrine checks pass. :white_check_mark:", ""]

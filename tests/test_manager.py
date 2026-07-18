@@ -28,6 +28,7 @@ from invigil.model import Check, Status
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _write_plugin(plugin_dir: Path, name: str, content: str) -> Path:
     plugin_dir.mkdir(parents=True, exist_ok=True)
     p = plugin_dir / name
@@ -79,6 +80,7 @@ def invigil_register_check():
 # Stage 1 — discover_plugins
 # ---------------------------------------------------------------------------
 
+
 def test_discover_no_plugin_dir(tmp_path):
     """No .invigil/plugins/ → empty list."""
     assert discover_plugins(tmp_path) == []
@@ -101,6 +103,7 @@ def test_discover_empty_plugin_dir(tmp_path):
 # ---------------------------------------------------------------------------
 # Stage 2 — load_plugin
 # ---------------------------------------------------------------------------
+
 
 def test_load_plugin_success(tmp_path):
     p = _write_plugin(tmp_path, "good.py", MINIMAL_PLUGIN)
@@ -125,6 +128,7 @@ def test_load_plugin_no_function_raises(tmp_path):
 # Stage 3 — validate_manifest
 # ---------------------------------------------------------------------------
 
+
 def _minimal_manifest(**overrides) -> dict:
     base = {
         "id": "test-check",
@@ -141,9 +145,9 @@ def _minimal_manifest(**overrides) -> dict:
 def test_validate_manifest_valid():
     m = validate_manifest(_minimal_manifest())
     assert m["id"] == "test-check"
-    assert m["effort"] == "hours"    # default applied
+    assert m["effort"] == "hours"  # default applied
     assert m["severity"] == "standard"  # default applied
-    assert m["mandatory"] is True    # default applied
+    assert m["mandatory"] is True  # default applied
 
 
 def test_validate_manifest_missing_key():
@@ -194,6 +198,7 @@ def test_validate_manifest_source_in_error(tmp_path):
 # Stage 4 — merge_registry
 # ---------------------------------------------------------------------------
 
+
 def _make_pair(check_id: str, gate: str = "G1") -> tuple[Check, object]:
     check = Check(id=check_id, gate=gate, title=check_id)
     return (check, lambda ctx: None)
@@ -215,6 +220,7 @@ def test_merge_adds_extras():
 
 def test_merge_dedup_builtin_wins(caplog):
     import logging
+
     builtins = [_make_pair("a")]
     extras = [_make_pair("a")]  # same id as builtin
     with caplog.at_level(logging.WARNING, logger="invigil.manager"):
@@ -227,6 +233,7 @@ def test_merge_dedup_builtin_wins(caplog):
 # ---------------------------------------------------------------------------
 # Top-level — build_registry
 # ---------------------------------------------------------------------------
+
 
 def test_build_no_plugin_dir_returns_builtins(tmp_path):
     registry, warns = build_registry(tmp_path, builtins=REGISTRY)
@@ -258,6 +265,7 @@ def test_build_raising_call_emits_warn(tmp_path):
 # ---------------------------------------------------------------------------
 # Integration — full pipeline: plugin appears in run_all()
 # ---------------------------------------------------------------------------
+
 
 def test_project_plugin_appears_in_run_all(tmp_path):
     """A valid project plugin check runs via run_all() and appears in results."""

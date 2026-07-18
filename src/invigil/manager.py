@@ -39,6 +39,7 @@ log = logging.getLogger(__name__)
 # Custom exception
 # ---------------------------------------------------------------------------
 
+
 class PluginLoadError(Exception):
     """Raised when a plugin file cannot be imported."""
 
@@ -46,6 +47,7 @@ class PluginLoadError(Exception):
 # ---------------------------------------------------------------------------
 # Stage 1 — Discover
 # ---------------------------------------------------------------------------
+
 
 def discover_plugins(repo: Path) -> list[Path]:
     """Return all *.py files in .invigil/plugins/ (sorted for determinism).
@@ -62,6 +64,7 @@ def discover_plugins(repo: Path) -> list[Path]:
 # ---------------------------------------------------------------------------
 # Stage 2 — Load
 # ---------------------------------------------------------------------------
+
 
 def load_plugin(path: Path):
     """Import a plugin file and return its module object.
@@ -80,8 +83,7 @@ def load_plugin(path: Path):
         raise PluginLoadError(f"import error in {path.name}: {exc}") from exc
     if not hasattr(module, "invigil_register_check"):
         raise PluginLoadError(
-            f"{path.name} has no `invigil_register_check()` function — "
-            "add it to register checks with Invigil"
+            f"{path.name} has no `invigil_register_check()` function — add it to register checks with Invigil"
         )
     return module
 
@@ -89,6 +91,7 @@ def load_plugin(path: Path):
 # ---------------------------------------------------------------------------
 # Stage 3 — Validate
 # ---------------------------------------------------------------------------
+
 
 def validate_manifest(manifest: dict, source: str = "") -> dict:
     """Validate a single check manifest dict returned by a plugin.
@@ -134,24 +137,25 @@ def validate_manifest(manifest: dict, source: str = "") -> dict:
 
     # Return validated copy with defaults applied
     return {
-        "id":             manifest["id"],
-        "gate":           gate,
-        "title":          manifest["title"],
-        "weight":         int(manifest.get("weight", 1)),
-        "mandatory":      bool(manifest.get("mandatory", True)),
-        "layer":          layer,
-        "group":          manifest["group"],
-        "effort":         effort,
-        "severity":       severity,
-        "discipline":     manifest.get("discipline", ""),
+        "id": manifest["id"],
+        "gate": gate,
+        "title": manifest["title"],
+        "weight": int(manifest.get("weight", 1)),
+        "mandatory": bool(manifest.get("mandatory", True)),
+        "layer": layer,
+        "group": manifest["group"],
+        "effort": effort,
+        "severity": severity,
+        "discipline": manifest.get("discipline", ""),
         "check_callback": cb,
-        "fix_callback":   fix_cb,
+        "fix_callback": fix_cb,
     }
 
 
 # ---------------------------------------------------------------------------
 # Stage 4 — Merge
 # ---------------------------------------------------------------------------
+
 
 def merge_registry(
     builtins: list[tuple[Check, Callable]],
@@ -174,9 +178,7 @@ def merge_registry(
     merged = list(builtins)
     for check, fn in extras:
         if check.id in builtin_ids:
-            log.warning(
-                "plugin check %r shadows builtin — skipped (builtin always wins)", check.id
-            )
+            log.warning("plugin check %r shadows builtin — skipped (builtin always wins)", check.id)
         else:
             merged.append((check, fn))
     return merged
@@ -185,6 +187,7 @@ def merge_registry(
 # ---------------------------------------------------------------------------
 # Top-level entry point
 # ---------------------------------------------------------------------------
+
 
 def build_registry(
     repo: Path,
@@ -206,6 +209,7 @@ def build_registry(
     if builtins is None:
         # Lazy import to avoid a circular dependency at module load time
         from .checks import REGISTRY
+
         builtins = REGISTRY
 
     plugin_paths = discover_plugins(repo)
@@ -263,6 +267,7 @@ def build_registry(
 # ---------------------------------------------------------------------------
 # Helper
 # ---------------------------------------------------------------------------
+
 
 def _plugin_warn(check_id: str, detail: str) -> CheckResult:
     """Produce a WARN CheckResult for a plugin load/validation failure."""

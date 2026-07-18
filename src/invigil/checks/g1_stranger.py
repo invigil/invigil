@@ -65,8 +65,7 @@ def license_apache2(ctx: Context) -> CheckResult:
         check,
         Status.FAIL,
         f"{p.name} is not Apache-2.0",
-        "optional: switch to Apache-2.0 for maximum OSS compatibility; "
-        "see https://apache.org/licenses/LICENSE-2.0.txt",
+        "optional: switch to Apache-2.0 for maximum OSS compatibility; see https://apache.org/licenses/LICENSE-2.0.txt",
     )
 
 

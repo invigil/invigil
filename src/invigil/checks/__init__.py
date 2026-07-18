@@ -54,6 +54,7 @@ def run_one(ctx: Context, check_id: str) -> CheckResult | None:
     Searches both builtin REGISTRY and any project-plugin checks.
     """
     from ..manager import build_registry
+
     registry, _ = build_registry(ctx.repo)
     for check, fn in registry:
         if check.id == check_id:
@@ -79,6 +80,7 @@ def run_all(
       instead of running (used by pre-commit and `--offline`).
     """
     from ..manager import build_registry
+
     registry, plugin_warns = build_registry(ctx.repo)
 
     results: list[CheckResult] = list(plugin_warns)  # plugin errors appear first
@@ -96,9 +98,7 @@ def run_all(
         try:
             results.append(fn(ctx))
         except Exception as exc:  # a check must never crash the gate
-            results.append(
-                CheckResult(check, Status.WARN, detail=f"check errored: {exc}", fix="file an Invigil bug")
-            )
+            results.append(CheckResult(check, Status.WARN, detail=f"check errored: {exc}", fix="file an Invigil bug"))
     return results
 
 
