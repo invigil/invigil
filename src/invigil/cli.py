@@ -105,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
     ck_cmd.add_argument("--online", action="store_true", help="allow this group's network checks to run")
     ck_cmd.add_argument("--fix", action="store_true", help="apply fixes for failing checks and stage them")
 
-    st_cmd = sub.add_parser("stranger", help="boot published artifacts and probe them (Layer 2)")
+    st_cmd = sub.add_parser("stranger", help="the Cold-Start Gate: boot published artifacts and probe them (Layer 2)")
     st_cmd.add_argument("path", nargs="?", default=".", help="repo path holding .invigil.yml (default: .)")
 
     pf_cmd = sub.add_parser("portfolio", help="score several repos into one grade table (C5)")

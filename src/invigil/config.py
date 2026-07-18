@@ -1,10 +1,10 @@
 """Loader for `.invigil.yml` — the per-repo declaration of what to check and
-what the published artifacts / probes are for the Stranger Gate.
+what the published artifacts / probes are for the Cold-Start Gate.
 
 The config is intentionally small and declarative (config over code, per the
 project's OSS conventions). A repo with no `.invigil.yml` still gets a full
 static scorecard using sensible defaults; the file is only required for the
-Layer-2 Stranger Gate (artifacts/probes) and for overriding checks.
+Layer-2 Cold-Start Gate (artifacts/probes) and for overriding checks.
 """
 
 from __future__ import annotations

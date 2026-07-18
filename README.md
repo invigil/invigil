@@ -12,11 +12,14 @@
 [![AI-ready](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/invigil/invigil/main/badges/invigil-ai.json)](https://github.com/invigil/invigil#when-your-user-is-an-agent)
 
 Linters check your *code*. Dependabot checks your *dependencies*. **Nothing checks whether
-your project keeps the promises a stranger relies on:** that they can boot it in ten minutes,
-that every error tells them the fix, that the thing on PyPI actually installs today, that the
-README is still a landing page and not a 600-line wall.
+your project is legible — whether someone arriving cold can act on it:** boot it in ten
+minutes, get an error that tells them the fix, install the thing on PyPI *today*, read a
+README that's still a landing page and not a 600-line wall.
 
-This is the **Stranger Gate**: the gauntlet every open-source project runs when a new developer finds it. If they can't get to "hello world" in 10 minutes, they leave. If the artifact on PyPI is broken because CI only tests the source tree, they leave. If the error message is a silent stack trace, they leave.
+That is the test every open-source project takes when someone new finds it — a new engineer,
+or increasingly an AI agent with a context window instead of patience. If they can't get to
+"hello world" in 10 minutes, they leave. If the artifact on PyPI is broken because CI only
+tests the source tree, they leave. If the error message is a silent stack trace, they leave.
 
 Invigil turns those promises into mechanical, exact-fix-reporting checks and runs them in CI —
 so the project speaks for itself.
@@ -34,7 +37,7 @@ Invigil does not replace your existing tools; it covers the product-quality gaps
 | **Linters / SonarQube** | Code style, static bugs, complexity | Does the *published artifact* actually boot? Is the README approachable? |
 | **Dependabot / Renovate** | Keeping dependencies updated | Are you enforcing the lockfile in CI? Is there a version matrix? |
 | **OpenSSF Scorecard** | Supply-chain security (branch rules, tokens) | Does the project have a Quick Start? Are failure modes actionable? |
-| **Invigil** | Product quality, stranger-readiness, error hygiene | (Invigil relies on the above tools and enforces their presence) |
+| **Invigil** | Product quality, legibility, error hygiene | (Invigil relies on the above tools and enforces their presence) |
 
 ---
 
@@ -44,11 +47,11 @@ You already wrote the doctrine; you just enforce it by hand. Every failing Invig
 you **what's wrong, why it matters, and the exact command to fix it** — because a gate that
 can't tell you how to pass it is the same broken-error-message anti-pattern it's meant to catch.
 
-It grades against seven **Gates**, each a promise to a different stranger:
+It grades against seven **Gates**, each a legibility promise to a different cold-start reader:
 
 | Gate | The promise |
 |---|---|
-| **G1** | A stranger succeeds in 10 minutes on a clean machine |
+| **G1** | Anyone arriving cold succeeds in 10 minutes on a clean machine |
 | **G2** | Every failure mode tells the user the fix |
 | **G3** | Published artifacts are machine-verified daily |
 | **G4** | Supply-chain evidence is public (Scorecard ≥7, signed releases, SBOM) |
@@ -113,14 +116,15 @@ Two layers, matching the doctrine:
   handler, SHA-pinned actions, an enforced lockfile, a coverage gate, a daily published-artifact
   smoke test, ≥5 good-first-issues, docs index, `llms.txt`/`AGENTS.md`, and more. Emits text /
   JSON / Markdown / a shields.io badge.
-- **Stranger Gate** (nightly, reusable) — on a clean runner, installs and boots each *published*
-  artifact you declare and probes its core surface within a 10-minute budget. Web services get
-  HTTP probes; a CLI image (an artifact with a `command:`) is run to completion and must exit 0.
-  One reusable workflow replaces the 60-line `smoke-published.yml` every repo copy-pastes:
+- **Cold-Start Gate** (nightly, reusable — `invigil stranger`) — on a clean runner, installs
+  and boots each *published* artifact you declare and probes its core surface within a
+  10-minute budget. Web services get HTTP probes; a CLI image (an artifact with a `command:`)
+  is run to completion and must exit 0. One reusable workflow replaces the 60-line
+  `smoke-published.yml` every repo copy-pastes:
 
 ```yaml
 # .github/workflows/stranger-gate.yml
-name: Stranger gate
+name: Cold-start gate
 on:
   schedule: [{ cron: "0 3 * * *" }]
   workflow_dispatch:
@@ -132,7 +136,7 @@ jobs:
 ## Configuration
 
 Drop a `.invigil.yml` at the repo root. It's optional for the static scorecard (sensible
-defaults apply) and required for the Stranger Gate (it declares what to boot and probe). Full
+defaults apply) and required for the Cold-Start Gate (it declares what to boot and probe). Full
 schema in [`schema/invigil.schema.json`](schema/invigil.schema.json); examples in
 [`examples/`](examples/).
 
@@ -169,7 +173,7 @@ A gate developers bypass is dead weight, so Invigil is built for zero friction:
     hooks: [{ id: invigil-layout }, { id: invigil-secrets }]
   ```
 
-  Heavier, network-bound checks (`scorecard`, the Stranger Gate) stay in CI.
+  Heavier, network-bound checks (`scorecard`, the Cold-Start Gate) stay in CI.
   `invigil score --offline` / `--layer local` / `--group supply-chain` slice it any way.
 - **Profiles, so it bends instead of forking.** `profile: strict | progressive | light`, plus
   per-check `weights`, `optional` (ding without gating), and `thresholds.fail_on`. Make it your
@@ -182,10 +186,11 @@ A gate developers bypass is dead weight, so Invigil is built for zero friction:
 
 ## When your user is an agent
 
-The stranger reading your repo is now, more often than not, an AI agent: it has a context
-window instead of patience, exit codes instead of intuition, and it acts only on what the repo
-states machine-readably. The `ai` check group grades that surface — not just *presence* of
-`llms.txt`/`AGENTS.md`, but whether an agent can actually act on them:
+Legibility now has two audiences. The reader arriving cold at your repo is, more often than
+not, an AI agent: it has a context window instead of patience, exit codes instead of
+intuition, and it acts only on what the repo states machine-readably. The `ai` check group
+grades that surface — not just *presence* of `llms.txt`/`AGENTS.md`, but whether an agent can
+actually act on them:
 
 | Check | The promise to the agent |
 |---|---|

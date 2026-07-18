@@ -8,7 +8,7 @@ project:
   min_gate: G4
   enforce: false        # report-only; flip to true once the grade is stable
 
-# Layer 2 — Stranger Gate: what a user actually downloads.
+# Layer 2 — Cold-Start Gate: what a user actually downloads.
 artifacts:
   - type: pypi
     name: "invicton[all-providers]"

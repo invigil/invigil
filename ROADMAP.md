@@ -8,7 +8,7 @@ its own doctrine, so each phase is expected to hold or raise Invigil's own gate 
 - **Static Doctrine Scorecard** — ~25 checks across Gates G1–G5 + Tier-1 secrets; weighted
   score → gate level + letter grade; every failure prints the exact fix. Text / JSON / Markdown
   / shields-badge output.
-- **Stranger Gate** — `invigil stranger` boot-and-probe engine + reusable workflow; HTTP web
+- **Cold-Start Gate** — `invigil stranger` boot-and-probe engine + reusable workflow; HTTP web
   services *and* CLI images (`command:` → run to completion, exit 0).
 - **Modular + offline** — checks tagged `local`/`network`/`heavy`; `invigil check <group>` runs
   one group offline (~120 ms) for pre-commit; `--offline`/`--layer`/`--group` slicing.
@@ -51,7 +51,7 @@ decision on whether `github-action` stays (the core repo's `action.yml` already 
 
 ## Phase E — AI-legibility ✅ (shipped v1.5.0)
 
-**The stranger is now an agent.** The primary reader of a repo is increasingly an AI agent —
+**Legibility's second audience.** The primary reader of a repo is increasingly an AI agent —
 a context window instead of patience, exit codes instead of intuition. v1.5.0 grades the
 machine-readable surface for *actionability*, not just presence: `agents-md-actionable`,
 `llms-txt-shape`, `agent-context-fresh`, `readme-heading-hierarchy`, `exit-codes-documented`

@@ -4,6 +4,17 @@ All notable changes to Invigil are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.5.1] - 2026-07-18
+
+### Changed
+- **"Legibility" replaces the "stranger" framing** across all user-visible
+  surfaces: the boot-and-probe engine is now the **Cold-Start Gate**, G1 reads
+  "Anyone arriving cold succeeds in 10 minutes", the G1 badge subtitle is
+  "cold-start ready", and the Action description grades "a repo's legibility to
+  newcomers and AI agents". Compatibility unbroken: the `invigil stranger`
+  subcommand and the `stranger-gate.yml` reusable-workflow path keep their
+  names (renaming published API is a v2 decision).
+
 ## [1.5.0] - 2026-07-18
 
 ### Added
@@ -129,6 +140,7 @@ All notable changes to Invigil are documented here. Format follows
 - **AI-native group (`ai`):** `llms-no-secrets` and `agent-scope-visibility` — the
   statically-honest first slice of "agent blast radius".
 
+[1.5.1]: https://github.com/invigil/invigil/releases/tag/v1.5.1
 [1.5.0]: https://github.com/invigil/invigil/releases/tag/v1.5.0
 [1.4.0]: https://github.com/invigil/invigil/releases/tag/v1.4.0
 [1.3.2]: https://github.com/invigil/invigil/releases/tag/v1.3.2

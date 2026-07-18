@@ -1,6 +1,6 @@
 name: Nightly smoke — published artifacts
 
-# S3: Invigil's own nightly smoke test. Calls the reusable stranger-gate.yml to
+# S3: Invigil's own nightly smoke test. Calls the reusable Cold-Start Gate (stranger-gate.yml) to
 # boot the published PyPI package and Docker image on a clean runner daily.
 # This is exactly the "smoke-published" check that invigil score looks for.
 
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   stranger:
-    name: Boot published invigil like a stranger
+    name: Boot published invigil from a cold start
     uses: invigil/invigil/.github/workflows/stranger-gate.yml@304e959baa230514ee2289c8abf121b20613e383  # v1
     with:
       path: "."

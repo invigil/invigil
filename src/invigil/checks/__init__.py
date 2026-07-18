@@ -128,7 +128,7 @@ from . import fixes as fixes  # noqa: E402,F401  (registers @fix handlers)
 # call sites stay clean. id -> (layer, group). Anything unlisted keeps the Check
 # defaults (local, "").
 TAGS: dict[str, tuple[str, str]] = {
-    # layout (G1 stranger-readiness)
+    # layout (G1 cold-start legibility)
     "license-present": ("local", "layout"),
     "license-apache2": ("local", "layout"),
     "readme-present": ("local", "layout"),

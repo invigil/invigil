@@ -1,4 +1,4 @@
-name: Stranger Gate (reusable)
+name: Cold-Start Gate (reusable)
 
 # Layer 2 of Invigil. Generalizes the copy-pasted `smoke-published.yml` workflows:
 # on a clean runner, boot each published artifact declared in the caller's
@@ -30,7 +30,7 @@ permissions:
 
 jobs:
   stranger:
-    name: Boot published artifacts like a stranger
+    name: Boot published artifacts from a cold start
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v4
@@ -39,5 +39,5 @@ jobs:
           python-version: "3.12"
       - name: Install Invigil
         run: pip install --quiet "${{ inputs.invigil-ref }}"
-      - name: Run the Stranger Gate
+      - name: Run the Cold-Start Gate
         run: invigil stranger "${{ inputs.path }}"

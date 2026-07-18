@@ -66,7 +66,7 @@ jobs:
           done
 
       # Plain docker CLI, no marketplace actions — same "shell out, never SDK"
-      # rule the Stranger Gate follows, and two fewer supply-chain dependencies.
+      # rule the Cold-Start Gate follows, and two fewer supply-chain dependencies.
       - name: Build and push the CLI image (ghcr)
         run: |
           ver="${GITHUB_REF_NAME#v}"

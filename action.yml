@@ -1,5 +1,5 @@
 name: "Invigil — Product Quality Gate"
-description: "Grade a repo on stranger-readiness and post a scorecard PR comment with the exact fix for every failure."
+description: "Grade a repo's legibility to newcomers and AI agents — a scorecard PR comment with the exact fix for every failure."
 author: "Vamshi Krishna Santhapuri"
 branding:
   icon: "eye"

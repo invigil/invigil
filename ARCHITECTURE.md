@@ -43,7 +43,7 @@ invigil/invigil/
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci.yml               # ✅ unit tests, lint, self-score, PyPI/GHCR staging
-│   │   ├── stranger-gate.yml    # ✅ reusable workflow for nightly artifact smoke runs
+│   │   ├── stranger-gate.yml    # ✅ reusable Cold-Start Gate workflow for nightly artifact smoke runs
 │   │   └── self-score.yml       # 🟡 (today: a `self-score` job inside ci.yml)
 │   └── ISSUE_TEMPLATE/          # ⬜
 ├── src/invigil/
@@ -73,7 +73,7 @@ fast pre-commit runs.
 
 - **local** — zero network, target < 50 ms (schema/layout validation, secret footprint checks).
 - **network** — external reads, target < 2 s (PyPI status, Scorecard lookups).
-- **heavy** — prolonged orchestration (the 10-minute Stranger Gate container bootstrap).
+- **heavy** — prolonged orchestration (the 10-minute Cold-Start Gate container bootstrap).
 
 ### The Python extension contract (`hookspecs.py`)
 ```python

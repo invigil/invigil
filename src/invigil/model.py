@@ -25,7 +25,7 @@ class Status(StrEnum):
 GATES = ["G1", "G2", "G3", "G4", "G5", "G6", "G7"]
 
 GATE_TITLES = {
-    "G1": "A stranger succeeds in 10 minutes on a clean machine",
+    "G1": "Anyone arriving cold succeeds in 10 minutes on a clean machine",
     "G2": "Every failure mode tells the user the fix",
     "G3": "Published artifacts are machine-verified daily",
     "G4": "Supply-chain evidence is public (Scorecard >=7, signed, SBOM)",
@@ -37,7 +37,7 @@ GATE_TITLES = {
 # Short human-readable subtitles for shields.io badges — readable at a glance
 # without knowing the gate numbering system.
 GATE_SHORT_TITLES = {
-    "G1": "stranger-ready",
+    "G1": "cold-start ready",
     "G2": "errors actionable",
     "G3": "artifact verified daily",
     "G4": "supply chain public",

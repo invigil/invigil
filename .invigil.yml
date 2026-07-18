@@ -1,6 +1,6 @@
-# Invigil grades itself (dogfood). The nightly Stranger Gate installs the
+# Invigil grades itself (dogfood). The nightly Cold-Start Gate installs the
 # published PyPI package and runs the published CLI image — the two things a
-# stranger actually downloads.
+# cold-start reader actually downloads.
 version: 1
 
 project:

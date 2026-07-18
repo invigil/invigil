@@ -134,7 +134,7 @@ invigil check layout . --fix            # auto-fix and stage
 
 ## `invigil stranger [PATH]`
 
-Boot every published artifact declared in `.invigil.yml` on the local machine and probe its core surface. This is the Layer 2 Stranger Gate — run in CI, not pre-commit.
+Boot every published artifact declared in `.invigil.yml` on the local machine and probe its core surface. This is the Layer 2 Cold-Start Gate (the subcommand keeps its original `stranger` name for compatibility) — run in CI, not pre-commit.
 
 ```bash
 invigil stranger .
@@ -205,7 +205,7 @@ checks:
   thresholds:
     fail_on: G3                   # hard-fail at/below this gate; report-only above
 
-# Layer 2 — Stranger Gate
+# Layer 2 — Cold-Start Gate
 artifacts:
   - type: pypi
     name: my-package

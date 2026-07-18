@@ -114,7 +114,7 @@ LLMS_TXT = """\
 ## Quickstart
 
 ```bash
-# the install + hello-world commands, exactly as a stranger would run them
+# the install + hello-world commands, exactly as a cold-start reader would run them
 ```
 
 ## Key files
