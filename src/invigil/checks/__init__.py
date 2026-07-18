@@ -49,8 +49,13 @@ def fix(check_id: str):
 
 
 def run_one(ctx: Context, check_id: str) -> CheckResult | None:
-    """Run a single check by id — used to re-verify after a fix (single-pass)."""
-    for check, fn in REGISTRY:
+    """Run a single check by id — used to re-verify after a fix (single-pass).
+
+    Searches both builtin REGISTRY and any project-plugin checks.
+    """
+    from ..manager import build_registry
+    registry, _ = build_registry(ctx.repo)
+    for check, fn in registry:
         if check.id == check_id:
             return fn(ctx)
     return None
@@ -63,15 +68,21 @@ def run_all(
     only_groups: set[str] | None = None,
     offline: bool = False,
 ) -> list[CheckResult]:
-    """Run the registered checks, optionally filtered by layer/group.
+    """Run all registered checks (builtin + project plugins), optionally filtered.
+
+    Project plugins are discovered from `.invigil/plugins/*.py` in the repo.
+    On any plugin error, a WARN result is injected — the gate never crashes.
 
     - `only_layers` / `only_groups`: run just that subset (the rest are omitted,
       not reported — used by `invigil check <group>` and `--layer`).
     - `offline`: never touch the network; `network`-layer checks become a SKIP
       instead of running (used by pre-commit and `--offline`).
     """
-    results: list[CheckResult] = []
-    for check, fn in REGISTRY:
+    from ..manager import build_registry
+    registry, plugin_warns = build_registry(ctx.repo)
+
+    results: list[CheckResult] = list(plugin_warns)  # plugin errors appear first
+    for check, fn in registry:
         if only_layers and check.layer not in only_layers:
             continue
         if only_groups and check.group not in only_groups:
@@ -85,7 +96,9 @@ def run_all(
         try:
             results.append(fn(ctx))
         except Exception as exc:  # a check must never crash the gate
-            results.append(CheckResult(check, Status.WARN, detail=f"check errored: {exc}", fix="file an Invigil bug"))
+            results.append(
+                CheckResult(check, Status.WARN, detail=f"check errored: {exc}", fix="file an Invigil bug")
+            )
     return results
 
 

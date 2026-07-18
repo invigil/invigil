@@ -1,0 +1,7 @@
+{
+  "_comment": "strict — highest bar. Use for release gates and mature projects.",
+  "only_layers": null,
+  "offline": false,
+  "fail_on": "G4",
+  "advisory_all": false
+}

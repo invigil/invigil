@@ -1,0 +1,7 @@
+{
+  "_comment": "progressive — default. Report-first, enforce at G3. Good for growing projects.",
+  "only_layers": null,
+  "offline": false,
+  "fail_on": "G3",
+  "advisory_all": false
+}

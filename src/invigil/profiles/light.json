@@ -1,0 +1,7 @@
+{
+  "_comment": "light — offline only, local checks, all advisory. Fast pre-commit or experiments.",
+  "only_layers": ["local"],
+  "offline": true,
+  "fail_on": null,
+  "advisory_all": true
+}
