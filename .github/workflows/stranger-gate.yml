@@ -9,7 +9,7 @@ name: Stranger Gate (reusable)
 # Callers use it in ~5 lines:
 #   jobs:
 #     stranger:
-#       uses: invigil/invigil/.github/workflows/stranger-gate.yml@v1
+#       uses: invigil/invigil/.github/workflows/stranger-gate.yml
 
 on:
   workflow_call:
