@@ -85,6 +85,7 @@ class CheckResult:
     status: Status
     detail: str = ""  # what was observed
     fix: str = ""  # exact command/edit to resolve (required when status == FAIL)
+    duration_ms: float = 0.0  # callback execution time, populated by run_all
 
     @property
     def ok(self) -> bool:

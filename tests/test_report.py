@@ -28,6 +28,7 @@ def test_json_is_valid_and_keyed():
     assert data["repo"] == "demo"
     assert {"gate", "grade", "earned", "possible", "percent", "checks"} <= data.keys()
     assert data["checks"][1]["fix"] == "split into docs/"
+    assert data["checks"][0]["duration_ms"] == 0.0
 
 
 def test_markdown_has_failure_table():

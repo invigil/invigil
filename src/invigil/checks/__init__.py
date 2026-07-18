@@ -11,6 +11,7 @@ discipline module here and its checks light up automatically.
 from __future__ import annotations
 
 from collections.abc import Callable
+from time import perf_counter
 
 from ..context import Context
 from ..model import Check, CheckResult, Status
@@ -95,10 +96,18 @@ def run_all(
         if offline and check.layer == "network":
             results.append(CheckResult(check, Status.SKIP, detail="offline — network check skipped"))
             continue
+        started_at = perf_counter()
         try:
-            results.append(fn(ctx))
+            result = fn(ctx)
         except Exception as exc:  # a check must never crash the gate
-            results.append(CheckResult(check, Status.WARN, detail=f"check errored: {exc}", fix="file an Invigil bug"))
+            result = CheckResult(
+                check,
+                Status.WARN,
+                detail=f"check errored: {exc}",
+                fix="file an Invigil bug",
+            )
+        result.duration_ms = round((perf_counter() - started_at) * 1000, 3)
+        results.append(result)
     return results
 
 

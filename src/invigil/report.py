@@ -61,6 +61,7 @@ def as_json(sc: Scorecard) -> str:
                     "status": r.status.value,
                     "detail": r.detail,
                     "fix": r.fix,
+                    "duration_ms": r.duration_ms,
                 }
                 for r in sc.results
             ],
