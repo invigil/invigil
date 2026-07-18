@@ -2,7 +2,7 @@ name: "Invigil — Product Quality Gate"
 description: "Grade a repo on stranger-readiness and post a scorecard PR comment with the exact fix for every failure."
 author: "Vamshi Krishna Santhapuri"
 branding:
-  icon: "check-circle"
+  icon: "eye"
   color: "purple"
 
 inputs:

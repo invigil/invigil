@@ -4,6 +4,21 @@ All notable changes to Invigil are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-07-18
+
+### Added
+- JSON reports now include `duration_ms` per check — callback execution time
+  measured in `run_all`, recorded for errored (WARN) checks too. Contributed by
+  @floze-the-genius in [#11](https://github.com/invigil/invigil/pull/11) —
+  Invigil's first external contribution. Closes #10.
+
+### Changed
+- Marketplace branding icon is now `eye` (invigilate — to watch over an exam),
+  replacing the generic `check-circle`.
+- Listed on the GitHub Marketplace as "Invigil — Product Quality Gate"
+  (Continuous integration · Code quality).
+- `main` is now a protected branch; CodeQL analysis runs on every push and PR.
+
 ## [1.3.2] - 2026-07-18
 
 ### Changed
@@ -97,6 +112,7 @@ All notable changes to Invigil are documented here. Format follows
 - **AI-native group (`ai`):** `llms-no-secrets` and `agent-scope-visibility` — the
   statically-honest first slice of "agent blast radius".
 
+[1.4.0]: https://github.com/invigil/invigil/releases/tag/v1.4.0
 [1.3.2]: https://github.com/invigil/invigil/releases/tag/v1.3.2
 [1.3.1]: https://github.com/invigil/invigil/releases/tag/v1.3.1
 [1.3.0]: https://github.com/invigil/invigil/compare/v1.0.0...v1.3.0
