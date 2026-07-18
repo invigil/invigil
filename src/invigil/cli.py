@@ -25,7 +25,7 @@ from .checks import GROUPS, LAYERS
 from .config import InvigilConfig
 from .context import Context
 from .model import GATES, Scorecard, Status
-from .report import RENDERERS
+from .report import RENDERERS, as_text
 
 
 def score(
@@ -98,6 +98,7 @@ def main(argv: list[str] | None = None) -> int:
     sc_cmd.add_argument("--group", action="append", choices=GROUPS, help="only run this group (repeatable)")
     sc_cmd.add_argument("--profile", choices=list(engine.PROFILES), help="override the .invigil.yml profile")
     sc_cmd.add_argument("--fix", action="store_true", help="apply available fixes for failing checks, then re-score")
+    sc_cmd.add_argument("-q", "--quiet", action="store_true", help="suppress passing checks, show only failures/warnings + summary")
 
     ck_cmd = sub.add_parser("check", help="run one check group, offline (fast — for pre-commit)")
     ck_cmd.add_argument("group", choices=GROUPS, help="the check group to run")
@@ -133,7 +134,10 @@ def main(argv: list[str] | None = None) -> int:
             if changed is None:
                 return 3
             sc, config = score(repo, **score_kwargs)  # re-score to reflect fixes
-        rendered = RENDERERS[args.format](sc)
+        if args.format == "text":
+            rendered = as_text(sc, quiet=args.quiet)
+        else:
+            rendered = RENDERERS[args.format](sc)
         if args.output:
             Path(args.output).write_text(rendered + "\n")
         else:

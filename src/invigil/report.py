@@ -21,26 +21,43 @@ def _sorted_failures(sc: Scorecard) -> list:
     return sorted(sc.failures(), key=lambda r: _EFFORT_ORDER.get(r.check.effort, 3))
 
 
-def as_text(sc: Scorecard) -> str:
+def as_text(sc: Scorecard, *, quiet: bool = False) -> str:
     lines = [
         f"Invigil scorecard — {sc.repo}",
         f"  Gate: {sc.gate_level()}   Grade: {sc.grade()}   Score: {sc.earned}/{sc.possible} ({sc.percent:.0f}%)",
         "",
     ]
     failures = _sorted_failures(sc)
-    if failures:
-        lines.append("Failing checks (fix these to raise the gate):")
-        for r in failures:
-            effort_tag = f"  [{r.check.effort}]" if r.check.effort else ""
-            lines.append(f"  [{r.check.gate}] {r.check.title}{effort_tag}")
-            lines.append(f"        why: {r.detail}")
-            lines.append(f"        fix: {r.fix}")
+    warns = [r for r in sc.results if r.status == Status.WARN]
+    if failures or warns:
+        if failures:
+            lines.append("Failing checks (fix these to raise the gate):")
+            for r in failures:
+                effort_tag = f"  [{r.check.effort}]" if r.check.effort else ""
+                lines.append(f"  [{r.check.gate}] {r.check.title}{effort_tag}")
+                lines.append(f"        why: {r.detail}")
+                lines.append(f"        fix: {r.fix}")
+        if warns:
+            if failures:
+                lines.append("")
+            lines.append("Warnings:")
+            for r in warns:
+                effort_tag = f"  [{r.check.effort}]" if r.check.effort else ""
+                lines.append(f"  [{r.check.gate}] {r.check.title}{effort_tag}")
+                lines.append(f"        why: {r.detail}")
         lines.append("")
-    passed = [r for r in sc.results if r.status == Status.PASS]
-    lines.append(
-        f"Passing: {len(passed)}   Failing: {len(failures)}   "
-        f"Skipped: {sum(1 for r in sc.results if r.status == Status.SKIP)}"
-    )
+    if not quiet:
+        passed = [r for r in sc.results if r.status == Status.PASS]
+        lines.append(
+            f"Passing: {len(passed)}   Failing: {len(failures)}   "
+            f"Skipped: {sum(1 for r in sc.results if r.status == Status.SKIP)}"
+        )
+    else:
+        # In quiet mode, still show the summary counts
+        lines.append(
+            f"Failing: {len(failures)}   Warnings: {len(warns)}   "
+            f"Skipped: {sum(1 for r in sc.results if r.status == Status.SKIP)}"
+        )
     return "\n".join(lines)
 
 
