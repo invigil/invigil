@@ -86,7 +86,7 @@ jobs:
             invigil.spdx.json
           generate_release_notes: true
 
-      # Keep `uses: invigil/invigil@v1` and `rev: v1` pointing at the newest
+      # Keep the `invigil/invigil@v1` tag and `rev: v1` pointing at the newest
       # v1.x.y. Safe with the trigger above: `v1` doesn't match v*.*.*, so
       # force-moving it never re-publishes.
       - name: Move the vMAJOR tag to this release

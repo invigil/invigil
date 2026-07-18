@@ -15,6 +15,6 @@ permissions:
 jobs:
   stranger:
     name: Boot published invigil like a stranger
-    uses: invigil/invigil/.github/workflows/stranger-gate.yml@v1
+    uses: invigil/invigil/.github/workflows/stranger-gate.yml@304e959baa230514ee2289c8abf121b20613e383  # v1
     with:
       path: "."
