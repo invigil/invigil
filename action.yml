@@ -1,5 +1,5 @@
-name: "Invigil — Doctrine Quality Gate"
-description: "Grade a repo against a product-quality doctrine (a stranger boots it in 10 min; every error tells the fix; README <=300 lines; artifacts smoke-tested daily) and post a scorecard."
+name: "Invigil — Product Quality Gate"
+description: "Grade a repo on stranger-readiness — boots in 10 minutes, errors that tell the fix, artifacts smoke-tested daily — and post the scorecard as a PR comment with the exact fix for every failure."
 author: "Vamshi Krishna Santhapuri"
 branding:
   icon: "check-circle"
