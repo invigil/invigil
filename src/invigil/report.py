@@ -21,21 +21,33 @@ def _sorted_failures(sc: Scorecard) -> list:
     return sorted(sc.failures(), key=lambda r: _EFFORT_ORDER.get(r.check.effort, 3))
 
 
-def as_text(sc: Scorecard) -> str:
-    lines = [
-        f"Invigil scorecard — {sc.repo}",
-        f"  Gate: {sc.gate_level()}   Grade: {sc.grade()}   Score: {sc.earned}/{sc.possible} ({sc.percent:.0f}%)",
-        "",
-    ]
+def as_text(sc: Scorecard, *, quiet: bool = False) -> str:
+    """Terminal report. `quiet` prints only FAIL/WARN blocks — no header, no
+    summary — so a fully passing repo produces no output at all (script- and
+    pre-commit-friendly: silence is the pass signal)."""
     failures = _sorted_failures(sc)
+    warns = [r for r in sc.results if r.status == Status.WARN]
+    lines: list[str] = []
+    if not quiet:
+        lines += [
+            f"Invigil scorecard — {sc.repo}",
+            f"  Gate: {sc.gate_level()}   Grade: {sc.grade()}   Score: {sc.earned}/{sc.possible} ({sc.percent:.0f}%)",
+            "",
+        ]
     if failures:
-        lines.append("Failing checks (fix these to raise the gate):")
+        if not quiet:
+            lines.append("Failing checks (fix these to raise the gate):")
         for r in failures:
             effort_tag = f"  [{r.check.effort}]" if r.check.effort else ""
             lines.append(f"  [{r.check.gate}] {r.check.title}{effort_tag}")
             lines.append(f"        why: {r.detail}")
             lines.append(f"        fix: {r.fix}")
-        lines.append("")
+        if not quiet:
+            lines.append("")
+    if quiet:
+        for r in warns:
+            lines.append(f"  [warn] {r.check.title}: {r.detail}")
+        return "\n".join(lines)
     passed = [r for r in sc.results if r.status == Status.PASS]
     lines.append(
         f"Passing: {len(passed)}   Failing: {len(failures)}   "

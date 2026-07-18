@@ -40,6 +40,20 @@ def test_main_report_only_never_fails(tmp_path, capsys):
     assert "Invigil scorecard" in capsys.readouterr().out
 
 
+def test_score_quiet_prints_failures_without_header(tmp_path, capsys):
+    rc = cli.main(["score", str(tmp_path), "--quiet"])  # empty repo: plenty of failures
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "fix:" in out and "Invigil scorecard" not in out and "Passing:" not in out
+
+
+def test_check_quiet_passing_group_is_silent(tmp_path, capsys):
+    make_good_repo(tmp_path)
+    rc = cli.main(["check", "layout", str(tmp_path), "-q"])
+    assert rc == 0
+    assert capsys.readouterr().out == ""
+
+
 def test_evaluate_is_a_score_alias(tmp_path, capsys):
     make_good_repo(tmp_path)
     assert cli.main(["score", str(tmp_path), "--format", "llm"]) == 0

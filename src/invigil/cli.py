@@ -121,6 +121,9 @@ def main(argv: list[str] | None = None) -> int:
     sc_cmd.add_argument(
         "--pr-mode", action="store_true", help="with --fix: allow fixes under CI, but only on a non-default branch"
     )
+    sc_cmd.add_argument(
+        "-q", "--quiet", action="store_true", help="text format only: print FAIL/WARN lines, nothing when all pass"
+    )
 
     ck_cmd = sub.add_parser("check", help="run one check group, offline (fast — for pre-commit)")
     ck_cmd.add_argument("group", choices=GROUPS, help="the check group to run")
@@ -129,6 +132,9 @@ def main(argv: list[str] | None = None) -> int:
     ck_cmd.add_argument("--fix", action="store_true", help="apply fixes for failing checks and stage them")
     ck_cmd.add_argument(
         "--pr-mode", action="store_true", help="with --fix: allow fixes under CI, but only on a non-default branch"
+    )
+    ck_cmd.add_argument(
+        "-q", "--quiet", action="store_true", help="print only FAIL lines, no summary — silence means the group passes"
     )
 
     st_cmd = sub.add_parser("stranger", help="the Cold-Start Gate: boot published artifacts and probe them (Layer 2)")
@@ -162,10 +168,15 @@ def main(argv: list[str] | None = None) -> int:
             if changed is None:
                 return 3
             sc, config = score(repo, **score_kwargs)  # re-score to reflect fixes
-        rendered = RENDERERS[args.format](sc)
+        if args.format == "text":
+            from .report import as_text
+
+            rendered = as_text(sc, quiet=args.quiet)
+        else:
+            rendered = RENDERERS[args.format](sc)
         if args.output:
             Path(args.output).write_text(rendered + "\n")
-        else:
+        elif rendered:
             print(rendered)
 
         eff = engine.resolve(config)
@@ -193,8 +204,9 @@ def main(argv: list[str] | None = None) -> int:
         fails = sc.failures()
         for r in fails:
             print(f"FAIL [{args.group}] {r.check.title}\n      why: {r.detail}\n      fix: {r.fix}")
-        passed = sum(1 for r in sc.results if r.status == Status.PASS)
-        print(f"invigil check {args.group}: {passed} passed, {len(fails)} failing")
+        if not args.quiet:
+            passed = sum(1 for r in sc.results if r.status == Status.PASS)
+            print(f"invigil check {args.group}: {passed} passed, {len(fails)} failing")
         if fails:
             return 1
         return 1 if changed else 0  # pre-commit: files were fixed+staged, re-commit

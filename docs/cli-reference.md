@@ -41,6 +41,8 @@ Score a repo against all quality gates. Report-only by default — never blocks 
 
 `--fix` applies available mechanical fixes (refused under CI: exit 3). `--fix --pr-mode` lifts that CI-lockout for PR-bot flows, but refuses (exit 3) on the repo's default branch — automated fixes may only land on a work branch that a human merges via PR. The same flags exist on `invigil check`.
 
+`-q`/`--quiet` (text format, also on `invigil check`): print only FAIL/WARN lines with their fixes — no header, no summary. A fully passing run produces no output: silence is the pass signal, so it composes cleanly in scripts and pre-commit hooks.
+
 ```bash
 invigil score .
 invigil score /path/to/repo --format markdown --output score.md

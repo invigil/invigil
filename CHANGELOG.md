@@ -4,6 +4,13 @@ All notable changes to Invigil are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- `-q`/`--quiet` on `score`/`evaluate`/`check`: only FAIL/WARN lines, no header
+  or summary — a fully passing run prints nothing. Closes #6; supersedes #12
+  (thanks @gandzekas for the initiative).
+
 ## [1.6.0] - 2026-07-18
 
 ### Added

@@ -91,6 +91,29 @@ def test_llm_format_is_terse_and_stable():
     assert len(out) < 1024  # context-budget honesty
 
 
+def test_text_quiet_all_pass_is_silent():
+    sc = Scorecard("demo", [CheckResult(Check(id="a", gate="G1", title="x"), Status.PASS)])
+    assert report.as_text(sc, quiet=True) == ""
+
+
+def test_text_quiet_shows_only_failure_blocks():
+    out = report.as_text(_sc(), quiet=True)
+    assert "fix: split into docs/" in out
+    assert "Invigil scorecard" not in out
+    assert "Passing:" not in out
+
+
+def test_text_quiet_surfaces_warns():
+    sc = Scorecard("demo", [CheckResult(Check(id="w", gate="G1", title="wobbly"), Status.WARN, detail="hmm")])
+    out = report.as_text(sc, quiet=True)
+    assert "[warn] wobbly: hmm" in out
+
+
+def test_text_default_output_unchanged_by_quiet_param():
+    assert "Invigil scorecard" in report.as_text(_sc())
+    assert "Passing:" in report.as_text(_sc())
+
+
 def test_llm_format_healthy_repo_is_two_lines():
     sc = Scorecard("demo", [CheckResult(Check(id="a", gate="G1", title="x"), Status.PASS)])
     assert len(report.as_llm(sc).splitlines()) == 2
