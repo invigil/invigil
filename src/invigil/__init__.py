@@ -6,4 +6,4 @@ every error tells the fix (G2), published artifacts are machine-verified daily
 those Gates into mechanical, exact-fix-reporting checks.
 """
 
-__version__ = "1.3.1"
+__version__ = "1.3.2"

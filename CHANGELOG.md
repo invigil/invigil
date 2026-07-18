@@ -4,6 +4,14 @@ All notable changes to Invigil are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.3.2] - 2026-07-18
+
+### Changed
+- Action metadata reworded for the GitHub Marketplace listing: name is now
+  "Invigil — Product Quality Gate", description fits the 125-char limit.
+- Scorecard hardening: portfolio workflow token scoped to its job, scheduled
+  CodeQL analysis, Docker base image pinned by digest.
+
 ## [1.3.1] - 2026-07-18
 
 ### Fixed
@@ -89,6 +97,7 @@ All notable changes to Invigil are documented here. Format follows
 - **AI-native group (`ai`):** `llms-no-secrets` and `agent-scope-visibility` — the
   statically-honest first slice of "agent blast radius".
 
+[1.3.2]: https://github.com/invigil/invigil/releases/tag/v1.3.2
 [1.3.1]: https://github.com/invigil/invigil/releases/tag/v1.3.1
 [1.3.0]: https://github.com/invigil/invigil/compare/v1.0.0...v1.3.0
 [1.2.0]: https://github.com/invigil/invigil/compare/v1.0.0...v1.3.0
