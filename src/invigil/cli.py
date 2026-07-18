@@ -87,7 +87,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--version", action="version", version=f"invigil {__version__}")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
-    sc_cmd = sub.add_parser("score", help="score a repo against the doctrine")
+    sc_cmd = sub.add_parser("score", aliases=["evaluate"], help="score a repo against the doctrine")
     sc_cmd.add_argument("path", nargs="?", default=".", help="repo path (default: .)")
     sc_cmd.add_argument("--format", choices=list(RENDERERS), default="text")
     sc_cmd.add_argument("--min-gate", default=None, help="override target gate (e.g. G4)")
@@ -116,7 +116,7 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
 
-    if args.cmd == "score":
+    if args.cmd in ("score", "evaluate"):
         repo = Path(args.path).resolve()
         if not repo.exists():
             print(f"invigil: path not found: {repo}", file=sys.stderr)

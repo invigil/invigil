@@ -37,7 +37,7 @@ repos:
 
 ## `invigil score [PATH]`
 
-Score a repo against all quality gates. Report-only by default — never blocks a build unless `--enforce` is set.
+Score a repo against all quality gates. Report-only by default — never blocks a build unless `--enforce` is set. `invigil evaluate` is an exact alias — the spelling an AI agent (or a human instructing one) tends to reach for.
 
 ```bash
 invigil score .

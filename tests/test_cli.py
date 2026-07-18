@@ -40,6 +40,14 @@ def test_main_report_only_never_fails(tmp_path, capsys):
     assert "Invigil scorecard" in capsys.readouterr().out
 
 
+def test_evaluate_is_a_score_alias(tmp_path, capsys):
+    make_good_repo(tmp_path)
+    assert cli.main(["score", str(tmp_path), "--format", "llm"]) == 0
+    via_score = capsys.readouterr().out
+    assert cli.main(["evaluate", str(tmp_path), "--format", "llm"]) == 0
+    assert capsys.readouterr().out == via_score
+
+
 def test_main_enforce_fails_below_gate(tmp_path):
     # Empty repo can't reach the default G4 -> enforce exits 1.
     assert cli.main(["score", str(tmp_path), "--enforce", "--min-gate", "G4"]) == 1

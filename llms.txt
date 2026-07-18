@@ -18,7 +18,7 @@
 pip install invigil
 invigil score .                 # text scorecard with fixes
 invigil score . --format json   # machine-readable
-invigil score . --format llm    # token-economical: built for you, the agent
+invigil evaluate . --format llm # token-economical: built for you, the agent (`evaluate` = `score`)
 ```
 
 GitHub Action: `uses: invigil/invigil@v1`.
