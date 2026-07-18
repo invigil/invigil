@@ -6,6 +6,10 @@ All notable changes to Invigil are documented here. Format follows
 
 ## [1.3.0] - 2026-07-18
 
+> **Note:** this is the first release published since 1.0.0. The 1.1.0 and 1.2.0
+> changes below were merged to `main` but never tagged or published; their
+> artifacts (including the Docker image) first ship with this release.
+
 ### Added
 - **Structured plugin architecture**: Invigil now supports local-first project plugins via `.invigil/plugins/*.py`. Drop a script exporting `invigil_register_check()` and it seamlessly integrates into the scorecard.
   - Zero dependencies: implemented using native `importlib` and `typing.Protocol` instead of heavy dependencies like `pluggy`.
@@ -21,7 +25,7 @@ All notable changes to Invigil are documented here. Format follows
   - Profiles (`strict`, `progressive`, `light`) are now externalized to JSON configs.
   - CLI reference published at `docs/cli-reference.md`.
 
-## [1.2.0] - 2026-07-18
+## [1.2.0] - 2026-07-18 (never published — first shipped in 1.3.0)
 
 ### Added
 - **`invigil fix` engine** — `score`/`check` gain `--fix`, which applies mechanical
@@ -37,7 +41,7 @@ All notable changes to Invigil are documented here. Format follows
   - Ships fixes for the missing-governance-file checks (SECURITY.md, CONTRIBUTING.md,
     CODE_OF_CONDUCT.md, CHANGELOG.md, dependabot.yml, docs/README.md, AGENTS.md).
 
-## [1.1.0] - 2026-07-16
+## [1.1.0] - 2026-07-16 (never published — first shipped in 1.3.0)
 
 ### Added
 - **Docker distribution:** the CLI ships as a container image at
@@ -77,6 +81,6 @@ All notable changes to Invigil are documented here. Format follows
   statically-honest first slice of "agent blast radius".
 
 [1.3.0]: https://github.com/invigil/invigil/releases/tag/v1.3.0
-[1.2.0]: https://github.com/invigil/invigil/releases/tag/v1.2.0
-[1.1.0]: https://github.com/invigil/invigil/releases/tag/v1.1.0
+[1.2.0]: https://github.com/invigil/invigil/compare/v1.0.0...v1.3.0
+[1.1.0]: https://github.com/invigil/invigil/compare/v1.0.0...v1.3.0
 [1.0.0]: https://github.com/invigil/invigil/releases/tag/v1.0.0

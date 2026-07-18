@@ -11,6 +11,13 @@ from invigil.fixer import apply_fixes, ci_active
 from invigil.mutator import Mutation, MutationError, Mutator
 
 
+@pytest.fixture(autouse=True)
+def _no_ci_env(monkeypatch):
+    # CI runners set CI=true, which trips the --fix CI-lockout; tests that
+    # want the lockout set CI themselves.
+    monkeypatch.delenv("CI", raising=False)
+
+
 # --- mutator --------------------------------------------------------------
 def test_create_file_idempotent(tmp_path):
     m = Mutator(tmp_path)
