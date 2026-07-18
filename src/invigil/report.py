@@ -123,4 +123,41 @@ def as_badge(sc: Scorecard) -> str:
     )
 
 
-RENDERERS = {"text": as_text, "json": as_json, "markdown": as_markdown, "badge": as_badge}
+def as_ai_badge(sc: Scorecard) -> str:
+    """Shields endpoint badge for the AI-readiness sub-score (group `ai`)."""
+    passed, applicable = sc.ai_readiness()
+    pct = 100.0 * passed / applicable if applicable else 0.0
+    return json.dumps(
+        {
+            "schemaVersion": 1,
+            "label": "ai-ready",
+            "message": f"{passed}/{applicable} agent-legible" if applicable else "n/a",
+            "color": "brightgreen" if pct >= 80 else "yellow" if pct >= 50 else "orange",
+            "cacheSeconds": 3600,
+        }
+    )
+
+
+def as_llm(sc: Scorecard) -> str:
+    """Token-economical report for agent consumption: one line per finding,
+    stable ordering (effort, then id), no decoration. A healthy repo costs the
+    reading agent two lines."""
+    ai_pass, ai_app = sc.ai_readiness()
+    lines = [
+        f"invigil repo={sc.repo} gate={sc.gate_level()} grade={sc.grade()} "
+        f"score={sc.earned}/{sc.possible} ai_ready={ai_pass}/{ai_app}"
+    ]
+    for r in sorted(sc.failures(), key=lambda r: (_EFFORT_ORDER.get(r.check.effort, 3), r.check.id)):
+        lines.append(f"FAIL {r.check.id} | {r.detail} | fix: {r.fix}")
+    for r in sorted((r for r in sc.results if r.status == Status.WARN), key=lambda r: r.check.id):
+        lines.append(f"WARN {r.check.id} | {r.detail}")
+    lines.append(
+        f"summary pass={sum(1 for r in sc.results if r.status == Status.PASS)} "
+        f"fail={len(sc.failures())} "
+        f"warn={sum(1 for r in sc.results if r.status == Status.WARN)} "
+        f"skip={sum(1 for r in sc.results if r.status == Status.SKIP)}"
+    )
+    return "\n".join(lines)
+
+
+RENDERERS = {"text": as_text, "json": as_json, "markdown": as_markdown, "badge": as_badge, "llm": as_llm}

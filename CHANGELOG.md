@@ -4,6 +4,23 @@ All notable changes to Invigil are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] - 2026-07-18
+
+### Added
+- **AI-legibility checks** (group `ai`): the stranger reading your repo is now an
+  agent. Five new checks grade the machine-readable surface for actionability,
+  not just presence — `agents-md-actionable` (fenced runnable commands in
+  AGENTS.md/CLAUDE.md), `llms-txt-shape` (spec shape + 10 KB context budget),
+  `agent-context-fresh` (instructions not 90+ days staler than the source),
+  `readme-heading-hierarchy` (one H1, real H2 sections — agents chunk by
+  heading), `exit-codes-documented` (CLI repos enumerate exit codes).
+- **`ai-ready` badge**: `--badges-dir` now also writes `<repo>-ai.json`, a
+  shields endpoint for the AI-readiness sub-score (`Scorecard.ai_readiness()`).
+- **`--format llm`**: a deterministic, token-economical report built to be read
+  by an agent — one line per finding, stable ordering, a healthy repo costs two
+  lines of context.
+- The `ai-door` fix now scaffolds both `AGENTS.md` and a spec-shaped `llms.txt`.
+
 ## [1.4.0] - 2026-07-18
 
 ### Added
@@ -112,6 +129,7 @@ All notable changes to Invigil are documented here. Format follows
 - **AI-native group (`ai`):** `llms-no-secrets` and `agent-scope-visibility` — the
   statically-honest first slice of "agent blast radius".
 
+[1.5.0]: https://github.com/invigil/invigil/releases/tag/v1.5.0
 [1.4.0]: https://github.com/invigil/invigil/releases/tag/v1.4.0
 [1.3.2]: https://github.com/invigil/invigil/releases/tag/v1.3.2
 [1.3.1]: https://github.com/invigil/invigil/releases/tag/v1.3.1

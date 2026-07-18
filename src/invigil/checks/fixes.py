@@ -94,12 +94,33 @@ AGENTS_MD = """\
 ## Build / test / lint
 
 ```bash
-# the exact commands to build, test, and lint this project
+# replace with the exact commands for this project:
+make install   # or: pip install -e ".[dev]" / npm ci
+make test      # or: pytest -q / npm test
+make lint      # or: ruff check . / npm run lint
 ```
 
 ## Conventions
 
 - (project-specific rules an agent must follow to contribute correctly)
+"""
+
+LLMS_TXT = """\
+# (project name)
+
+> One-paragraph summary: what this is, who it serves, and the one command that
+> proves it works. Agents read this file first — keep it under 10 KB.
+
+## Quickstart
+
+```bash
+# the install + hello-world commands, exactly as a stranger would run them
+```
+
+## Key files
+
+- [README](README.md) — landing page
+- (link the API/CLI reference and the config schema)
 """
 
 
@@ -139,4 +160,8 @@ def fix_docs_index(ctx: Context) -> list[Mutation]:
 
 @fix("ai-door")
 def fix_ai_door(ctx: Context) -> list[Mutation]:
-    return _create("AGENTS.md", AGENTS_MD)
+    # Both halves of the AI door: standing instructions (AGENTS.md) and the
+    # machine entry point (llms.txt). A malformed-but-present llms.txt is
+    # llms-txt-shape's FAIL and deliberately has no auto-fix — that's a human's
+    # judgment call.
+    return _create("AGENTS.md", AGENTS_MD) + _create("llms.txt", LLMS_TXT)

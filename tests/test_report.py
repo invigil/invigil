@@ -47,3 +47,50 @@ def test_badge_shape_and_color():
     assert badge["schemaVersion"] == 1
     assert badge["label"] == "invigil"
     assert badge["color"] in {"brightgreen", "green", "yellow", "orange", "red"}
+
+
+def _ai_sc():
+    def res(id_, status):
+        return CheckResult(Check(id=id_, gate="G5", title=id_, group="ai"), status)
+
+    return Scorecard(
+        "demo",
+        [
+            res("llms-txt-shape", Status.PASS),
+            res("agents-md-actionable", Status.PASS),
+            res("agent-context-fresh", Status.FAIL),
+            res("exit-codes-documented", Status.SKIP),  # excluded from applicable
+            CheckResult(Check(id="license-present", gate="G1", title="x"), Status.PASS),  # not group ai
+        ],
+    )
+
+
+def test_ai_readiness_counts_group_ai_only():
+    assert _ai_sc().ai_readiness() == (2, 3)
+
+
+def test_ai_badge_shape():
+    badge = json.loads(report.as_ai_badge(_ai_sc()))
+    assert badge["label"] == "ai-ready"
+    assert badge["message"] == "2/3 agent-legible"
+    assert badge["color"] == "yellow"  # 66% -> between 50 and 80
+
+
+def test_ai_badge_na_when_nothing_applicable():
+    sc = Scorecard("demo", [CheckResult(Check(id="a", gate="G1", title="x"), Status.PASS)])
+    assert json.loads(report.as_ai_badge(sc))["message"] == "n/a"
+
+
+def test_llm_format_is_terse_and_stable():
+    out = report.as_llm(_sc())
+    lines = out.splitlines()
+    assert lines[0].startswith("invigil repo=demo gate=")
+    assert "ai_ready=" in lines[0]
+    assert lines[1] == "FAIL b | 640 lines | fix: split into docs/"
+    assert lines[-1].startswith("summary pass=1 fail=1")
+    assert len(out) < 1024  # context-budget honesty
+
+
+def test_llm_format_healthy_repo_is_two_lines():
+    sc = Scorecard("demo", [CheckResult(Check(id="a", gate="G1", title="x"), Status.PASS)])
+    assert len(report.as_llm(sc).splitlines()) == 2

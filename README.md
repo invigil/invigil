@@ -9,6 +9,7 @@
 [![Docker](https://img.shields.io/badge/ghcr-invigil%2Finvigil-2496ed?logo=docker&logoColor=white)](https://github.com/invigil/invigil/pkgs/container/invigil)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/invigil/invigil/badge)](https://scorecard.dev/viewer/?uri=github.com/invigil/invigil)
 [![Invigil grade](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/invigil/invigil/main/badges/invigil.json)](https://github.com/invigil/invigil)
+[![AI-ready](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/invigil/invigil/main/badges/invigil-ai.json)](https://github.com/invigil/invigil#when-your-user-is-an-agent)
 
 Linters check your *code*. Dependabot checks your *dependencies*. **Nothing checks whether
 your project keeps the promises a stranger relies on:** that they can boot it in ten minutes,
@@ -178,6 +179,27 @@ A gate developers bypass is dead weight, so Invigil is built for zero friction:
 - **AI-era native.** The `ai` group checks that your `llms.txt`/`AGENTS.md` leak no secrets and
   that agent code declares its tool inventory — the first slice of "what's the blast radius if
   this agent is prompt-injected?"
+
+## When your user is an agent
+
+The stranger reading your repo is now, more often than not, an AI agent: it has a context
+window instead of patience, exit codes instead of intuition, and it acts only on what the repo
+states machine-readably. The `ai` check group grades that surface — not just *presence* of
+`llms.txt`/`AGENTS.md`, but whether an agent can actually act on them:
+
+| Check | The promise to the agent |
+|---|---|
+| `agents-md-actionable` | Your `AGENTS.md`/`CLAUDE.md` contains runnable fenced commands, not prose |
+| `llms-txt-shape` | `llms.txt` is spec-shaped and fits a 10 KB context budget |
+| `agent-context-fresh` | Agent instructions aren't 90+ days staler than the source they describe |
+| `readme-heading-hierarchy` | The README chunks cleanly (one H1, real H2 sections) |
+| `exit-codes-documented` | A CLI's exit codes are enumerated — agents branch on codes, not prose |
+| `llms-no-secrets` | The machine-readable surface leaks no credentials |
+| `agent-scope-visibility` | Agent code declares its tool inventory (blast-radius precondition) |
+
+Two artifacts fall out of it: an **`ai-ready` badge** (shields endpoint, emitted next to the
+grade badge by `--badges-dir`) and **`invigil score --format llm`** — a deterministic report
+under ~1 KB, built to be read *by* an agent: a healthy repo costs it two lines of context.
 
 ## The doctrine
 

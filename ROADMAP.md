@@ -49,6 +49,20 @@ deploy, working plugin-template CI, catalog criteria), branch protection + CODEO
 decision on whether `github-action` stays (the core repo's `action.yml` already serves
 `uses: invigil/invigil@v1`).
 
+## Phase E — AI-legibility ✅ (shipped v1.5.0)
+
+**The stranger is now an agent.** The primary reader of a repo is increasingly an AI agent —
+a context window instead of patience, exit codes instead of intuition. v1.5.0 grades the
+machine-readable surface for *actionability*, not just presence: `agents-md-actionable`,
+`llms-txt-shape`, `agent-context-fresh`, `readme-heading-hierarchy`, `exit-codes-documented`
+(all group `ai`, statically honest, SKIP when not applicable), plus an `ai-ready` shields
+badge and `invigil score --format llm` — a sub-1 KB deterministic report built to be read by
+an agent.
+
+**Next (v1.6.0):** an MCP server (`invigil mcp`, stdio, optional `[mcp]` extra) so coding
+agents call the gate natively; `docs-commands-exist` (fenced commands cross-checked against
+declared scripts) once the false-positive story is designed.
+
 ## Maturity criteria (Invigil grading itself)
 
 Invigil is category-credible when it passes its own gates: **G3** requires v1.3.0 published on

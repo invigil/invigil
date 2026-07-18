@@ -161,3 +161,11 @@ class Scorecard:
 
     def failures(self) -> list[CheckResult]:
         return [r for r in self.results if r.status == Status.FAIL]
+
+    def ai_readiness(self) -> tuple[int, int]:
+        """(passed, applicable) over the AI-legibility surface — every check in
+        group `ai`, SKIPs excluded from `applicable`. The repo's answer to "can
+        an agent land here and act?", reported separately from the human grade."""
+        applicable = [r for r in self.results if r.check.group == "ai" and r.status != Status.SKIP]
+        passed = [r for r in applicable if r.status == Status.PASS]
+        return len(passed), len(applicable)

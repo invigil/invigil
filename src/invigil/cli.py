@@ -196,13 +196,14 @@ def main(argv: list[str] | None = None) -> int:
             sc, _ = score(repo)
             scorecards.append(sc)
         if args.badges_dir:
-            from .report import as_badge
+            from .report import as_ai_badge, as_badge
 
             bdir = Path(args.badges_dir)
             bdir.mkdir(parents=True, exist_ok=True)
             for sc in scorecards:
                 (bdir / f"{sc.repo}.json").write_text(as_badge(sc) + "\n")
-            print(f"wrote {len(scorecards)} badge(s) to {bdir}")
+                (bdir / f"{sc.repo}-ai.json").write_text(as_ai_badge(sc) + "\n")
+            print(f"wrote {len(scorecards) * 2} badge(s) to {bdir}")
 
         table = build_table(scorecards, args.date or date.today().isoformat())
         if args.update:

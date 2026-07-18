@@ -165,6 +165,11 @@ TAGS: dict[str, tuple[str, str]] = {
     # ai-native (M5)
     "llms-no-secrets": ("local", "ai"),
     "agent-scope-visibility": ("local", "ai"),
+    "agents-md-actionable": ("local", "ai"),
+    "llms-txt-shape": ("local", "ai"),
+    "agent-context-fresh": ("local", "ai"),
+    "readme-heading-hierarchy": ("local", "ai"),
+    "exit-codes-documented": ("local", "ai"),
 }
 
 
