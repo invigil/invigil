@@ -59,9 +59,19 @@ machine-readable surface for *actionability*, not just presence: `agents-md-acti
 badge and `invigil score --format llm` — a sub-1 KB deterministic report built to be read by
 an agent.
 
-**Next (v1.6.0):** an MCP server (`invigil mcp`, stdio, optional `[mcp]` extra) so coding
-agents call the gate natively; `docs-commands-exist` (fenced commands cross-checked against
-declared scripts) once the false-positive story is designed.
+## Phase F — fix-by-PR bot ✅ (shipped v1.6.0)
+
+Dependabot-for-legibility: the reusable `fix-pr.yml` workflow applies mechanical fixes on a
+stable `invigil/fixes` branch and opens one batched PR. Anti-noise by design: opt-in only,
+one PR, a closed-unmerged PR is a "no" the bot respects. Enabled by `--fix --pr-mode`, a
+scoped CI-lockout exemption that still refuses the default branch. The scaffolded
+`AGENTS.md`/`llms.txt` templates now recruit agents (`invigil evaluate . --format llm`
+as the pre-PR step) — every adopting repo teaches future agents to run the gate.
+
+**Next (v1.7.0):** an MCP server (`invigil mcp`, stdio, optional `[mcp]` extra) + a
+published agent skill + registry listings (MCP registries; pre-commit.com hooks listing);
+`docs-commands-exist` once the false-positive story is designed. Phase 2 of the bot — a
+hosted GitHub App (`invigil[bot]`, Checks API annotations) — waits for adoption signal.
 
 ## Maturity criteria (Invigil grading itself)
 

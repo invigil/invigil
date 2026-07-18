@@ -4,6 +4,25 @@ All notable changes to Invigil are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] - 2026-07-18
+
+### Added
+- **Fix by PR** (Dependabot-for-legibility): reusable `fix-pr.yml` workflow applies
+  mechanical fixes on a stable `invigil/fixes` branch and opens one batched PR.
+  Opt-in only; one PR ever open; a PR closed unmerged is a "no" the bot respects.
+- **`--pr-mode`** on `score`/`check` (with `--fix`): lifts the CI-lockout for
+  PR-bot flows but refuses the default branch — automated fixes only land on a
+  work branch a human merges.
+- Scaffolded `AGENTS.md`/`llms.txt` templates now include
+  `invigil evaluate . --format llm` as the pre-PR verification step.
+- `invigil evaluate` — exact alias of `score`.
+
+### Fixed
+- `actions-sha-pinned` false positives: `uses:` references inside YAML comments
+  are no longer counted, and quoted pins (`uses: "org/action@<sha>"`) are
+  recognized as pinned. Caught by dogfood — the new fix-pr.yml's usage example
+  comment tripped the old parser.
+
 ## [1.5.1] - 2026-07-18
 
 ### Changed
@@ -140,6 +159,7 @@ All notable changes to Invigil are documented here. Format follows
 - **AI-native group (`ai`):** `llms-no-secrets` and `agent-scope-visibility` — the
   statically-honest first slice of "agent blast radius".
 
+[1.6.0]: https://github.com/invigil/invigil/releases/tag/v1.6.0
 [1.5.1]: https://github.com/invigil/invigil/releases/tag/v1.5.1
 [1.5.0]: https://github.com/invigil/invigil/releases/tag/v1.5.0
 [1.4.0]: https://github.com/invigil/invigil/releases/tag/v1.4.0

@@ -1,0 +1,102 @@
+name: Fix by PR (reusable)
+
+# Dependabot-for-legibility: apply Invigil's mechanical fixes on a work branch
+# and open ONE batched PR. Anti-noise rules, by design:
+#   - opt-in only (you call this workflow; nothing installs itself)
+#   - one stable head branch (invigil/fixes) -> one PR, never five
+#   - a closed PR is a "no": if any PR from that head was ever closed unmerged,
+#     the bot stays silent until you delete the branch to re-invite it
+#
+# Consumer usage (monthly beats weekly — these are one-time scaffolds, not deps):
+#   jobs:
+#     fix:
+#       uses: invigil/invigil/.github/workflows/fix-pr.yml@v1
+#   on:
+#     schedule: [{ cron: "0 6 1 * *" }]
+#     workflow_dispatch:
+
+on:
+  workflow_call:
+    inputs:
+      path:
+        description: "Repo path to fix (default: .)"
+        type: string
+        default: "."
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  HEAD_BRANCH: invigil/fixes
+
+jobs:
+  fix-pr:
+    name: Open a legibility fix PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # push the invigil/fixes branch
+      pull-requests: write   # open the PR
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v4
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Invigil
+        run: pip install --quiet invigil
+
+      - name: Respect prior decisions (idempotency gates)
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          open=$(gh pr list --head "$HEAD_BRANCH" --state open --json number --jq length)
+          if [ "$open" != "0" ]; then
+            echo "an invigil/fixes PR is already open — nothing to do"
+            echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          closed=$(gh pr list --head "$HEAD_BRANCH" --state closed --json number,mergedAt \
+                   --jq '[.[] | select(.mergedAt == null)] | length')
+          if [ "$closed" != "0" ]; then
+            echo "a previous invigil/fixes PR was closed unmerged — respecting the no"
+            echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Apply fixes on a work branch
+        if: steps.gate.outputs.skip == 'false'
+        id: fix
+        run: |
+          git switch -c "$HEAD_BRANCH"
+          invigil score "${{ inputs.path || '.' }}" --fix --pr-mode \
+            --format markdown --output "$RUNNER_TEMP/invigil-report.md" || true
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "nothing to fix — staying quiet"
+          fi
+
+      - name: Commit, push, open the PR
+        if: steps.gate.outputs.skip == 'false' && steps.fix.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: invigil legibility fixes"
+          git push -u origin "$HEAD_BRANCH"
+          {
+            echo "Batched mechanical fixes from [Invigil](https://github.com/invigil/invigil) — the legibility gate you wired into this repo."
+            echo
+            echo "**Honesty note:** some created files are scaffolds with placeholder TODOs"
+            echo '(e.g. `security@example.com` in SECURITY.md) — fill those in before merging.'
+            echo "Closing this PR unmerged tells the bot to stay silent."
+            echo
+            cat "$RUNNER_TEMP/invigil-report.md"
+          } > "$RUNNER_TEMP/pr-body.md"
+          gh pr create --title "chore: invigil legibility fixes" \
+            --body-file "$RUNNER_TEMP/pr-body.md" --head "$HEAD_BRANCH"

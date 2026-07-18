@@ -63,11 +63,15 @@ def actions_sha_pinned(ctx: Context) -> CheckResult:
     check = actions_sha_pinned.__invigil__  # type: ignore[attr-defined]
     unpinned: list[str] = []
     for p in ctx.workflow_files():
-        for owner_repo, ref in _USES.findall(p.read_text(errors="replace")):
-            if owner_repo.startswith((".", "docker://")):  # local/composite or docker refs are fine
+        for line in p.read_text(errors="replace").splitlines():
+            if line.lstrip().startswith("#"):  # a commented usage example is not a dependency
                 continue
-            if not _SHA.match(ref):
-                unpinned.append(f"{owner_repo}@{ref}")
+            for owner_repo, ref in _USES.findall(line):
+                owner_repo, ref = owner_repo.strip("\"'"), ref.strip("\"'")  # `uses: "x@sha"` is pinned too
+                if owner_repo.startswith((".", "docker://")):  # local/composite or docker refs are fine
+                    continue
+                if not _SHA.match(ref):
+                    unpinned.append(f"{owner_repo}@{ref}")
     if not unpinned:
         return CheckResult(check, Status.PASS, "all actions pinned to SHAs")
     sample = ", ".join(sorted(set(unpinned))[:3])

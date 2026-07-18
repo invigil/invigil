@@ -68,6 +68,22 @@ def test_actions_sha_pinned_ignores_local(tmp_path):
     assert g3.actions_sha_pinned(ctx(tmp_path)).status is Status.PASS
 
 
+def test_actions_sha_pinned_ignores_commented_examples(tmp_path):
+    sha = "a" * 40
+    body = (
+        "# usage:\n#   uses: org/repo/.github/workflows/reusable.yml@v1\n"
+        f"jobs:\n  x:\n    steps:\n      - uses: actions/checkout@{sha}\n"
+    )
+    wf(tmp_path, "reusable.yml", body)
+    assert g3.actions_sha_pinned(ctx(tmp_path)).status is Status.PASS
+
+
+def test_actions_sha_pinned_accepts_quoted_pin(tmp_path):
+    sha = "b" * 40
+    wf(tmp_path, "ci.yml", f'jobs:\n  x:\n    steps:\n      - uses: "actions/checkout@{sha}"\n')
+    assert g3.actions_sha_pinned(ctx(tmp_path)).status is Status.PASS
+
+
 def test_lockfile_and_coverage_and_matrix(tmp_path):
     wf(
         tmp_path,

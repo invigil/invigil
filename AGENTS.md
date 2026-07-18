@@ -9,7 +9,7 @@ product-quality doctrine and ships as a GitHub Action.
 pip install -e . ruff pytest pytest-cov
 ruff check . && ruff format --check .        # lint + format gate
 pytest --cov=invigil --cov-fail-under=80     # tests + coverage floor
-invigil score .                              # dogfood: grade Invigil with Invigil
+invigil evaluate . --format llm              # dogfood: grade Invigil with Invigil, before every PR
 ```
 
 ## Layout

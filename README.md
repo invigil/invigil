@@ -133,6 +133,29 @@ jobs:
     uses: invigil/invigil/.github/workflows/stranger-gate.yml@v1
 ```
 
+### Fix by PR (Dependabot-for-legibility)
+
+Opt in to a scheduled bot that applies Invigil's mechanical fixes on a work branch and opens
+**one batched PR** — governance scaffolds, agent context files, config hygiene. Three
+anti-noise rules are built in: it's opt-in only, one stable branch means one PR (never five),
+and a PR you close unmerged is a "no" the bot respects — it stays silent until you delete the
+`invigil/fixes` branch.
+
+```yaml
+# .github/workflows/legibility-fixes.yml
+name: Legibility fixes
+on:
+  schedule: [{ cron: "0 6 1 * *" }]   # monthly — these are one-time scaffolds, not deps
+  workflow_dispatch:
+jobs:
+  fix:
+    uses: invigil/invigil/.github/workflows/fix-pr.yml@v1
+```
+
+Under the hood it runs `invigil score --fix --pr-mode`: the fix engine's CI-lockout stays
+in force for protected branches — `--pr-mode` only permits fixes on a non-default branch,
+so nothing automated ever lands on `main` without a human merging the PR.
+
 ## Configuration
 
 Drop a `.invigil.yml` at the repo root. It's optional for the static scorecard (sensible

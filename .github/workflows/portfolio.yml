@@ -15,7 +15,7 @@ permissions:
 
 env:
   # Space-separated owner/name of the repos to grade. Edit here to add repos.
-  REPOS: "StratumOSS/Stratum kaaval/kaaval"
+  REPOS: "invicton/bakex kaaval/kaaval"
 
 jobs:
   portfolio:

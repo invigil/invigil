@@ -61,15 +61,35 @@ def _gate_ge(reached: str, target: str) -> bool:
     return GATES.index(reached) >= GATES.index(target)
 
 
-def _run_fixes(repo: Path, config: InvigilConfig, results: list) -> bool | None:
+def _on_default_branch(ctx: Context) -> bool:
+    """True when HEAD is the repo's default branch (origin/HEAD if resolvable,
+    else main/master by convention)."""
+    code, head = ctx.git("rev-parse", "--abbrev-ref", "HEAD")
+    if code != 0:
+        return False  # not a git repo — nothing to protect
+    branch = head.strip()
+    code, origin = ctx.git("symbolic-ref", "--short", "refs/remotes/origin/HEAD")
+    default = origin.strip().removeprefix("origin/") if code == 0 and origin.strip() else ""
+    return branch == default if default else branch in ("main", "master")
+
+
+def _run_fixes(repo: Path, config: InvigilConfig, results: list, *, pr_mode: bool = False) -> bool | None:
     """Apply fixes for failing checks and stage them. Returns True if any file
-    changed, False if nothing changed, or None if refused under CI (caller exits 3)."""
+    changed, False if nothing changed, or None if refused (caller exits 3).
+
+    `pr_mode` lifts the CI-lockout for a PR-bot flow, but only on a work branch:
+    the lockout's intent — no automated commits ever landing on a protected
+    branch — survives, because the fixes ride a branch a human merges via PR."""
     from .fixer import apply_fixes, ci_active
 
-    if ci_active():
-        print("invigil: --fix is disabled under CI (CI-lockout) — run it locally", file=sys.stderr)
-        return None
     ctx = Context(repo=repo, config=config)
+    if pr_mode:
+        if _on_default_branch(ctx):
+            print("invigil: --pr-mode refuses to fix on the default branch — switch to a work branch", file=sys.stderr)
+            return None
+    elif ci_active():
+        print("invigil: --fix is disabled under CI (CI-lockout) — run it locally or use --pr-mode", file=sys.stderr)
+        return None
     rep = apply_fixes(ctx, results)
     if rep.changed_files:
         ctx.git("add", *rep.changed_files)
@@ -98,12 +118,18 @@ def main(argv: list[str] | None = None) -> int:
     sc_cmd.add_argument("--group", action="append", choices=GROUPS, help="only run this group (repeatable)")
     sc_cmd.add_argument("--profile", choices=list(engine.PROFILES), help="override the .invigil.yml profile")
     sc_cmd.add_argument("--fix", action="store_true", help="apply available fixes for failing checks, then re-score")
+    sc_cmd.add_argument(
+        "--pr-mode", action="store_true", help="with --fix: allow fixes under CI, but only on a non-default branch"
+    )
 
     ck_cmd = sub.add_parser("check", help="run one check group, offline (fast — for pre-commit)")
     ck_cmd.add_argument("group", choices=GROUPS, help="the check group to run")
     ck_cmd.add_argument("path", nargs="?", default=".", help="repo path (default: .)")
     ck_cmd.add_argument("--online", action="store_true", help="allow this group's network checks to run")
     ck_cmd.add_argument("--fix", action="store_true", help="apply fixes for failing checks and stage them")
+    ck_cmd.add_argument(
+        "--pr-mode", action="store_true", help="with --fix: allow fixes under CI, but only on a non-default branch"
+    )
 
     st_cmd = sub.add_parser("stranger", help="the Cold-Start Gate: boot published artifacts and probe them (Layer 2)")
     st_cmd.add_argument("path", nargs="?", default=".", help="repo path holding .invigil.yml (default: .)")
@@ -115,6 +141,9 @@ def main(argv: list[str] | None = None) -> int:
     pf_cmd.add_argument("--badges-dir", help="write a shields.io endpoint badge <repo>.json per repo into DIR")
 
     args = parser.parse_args(argv)
+
+    if getattr(args, "pr_mode", False) and not args.fix:
+        parser.error("--pr-mode requires --fix")  # exit 2, argparse-style
 
     if args.cmd in ("score", "evaluate"):
         repo = Path(args.path).resolve()
@@ -129,7 +158,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         sc, config = score(repo, **score_kwargs)
         if args.fix:
-            changed = _run_fixes(repo, config, sc.results)
+            changed = _run_fixes(repo, config, sc.results, pr_mode=args.pr_mode)
             if changed is None:
                 return 3
             sc, config = score(repo, **score_kwargs)  # re-score to reflect fixes
@@ -156,7 +185,7 @@ def main(argv: list[str] | None = None) -> int:
         changed = False
         sc, config = score(repo, only_groups={args.group}, offline=not args.online)
         if args.fix and sc.failures():
-            result = _run_fixes(repo, config, sc.results)
+            result = _run_fixes(repo, config, sc.results, pr_mode=args.pr_mode)
             if result is None:
                 return 3
             changed = result

@@ -39,6 +39,8 @@ repos:
 
 Score a repo against all quality gates. Report-only by default — never blocks a build unless `--enforce` is set. `invigil evaluate` is an exact alias — the spelling an AI agent (or a human instructing one) tends to reach for.
 
+`--fix` applies available mechanical fixes (refused under CI: exit 3). `--fix --pr-mode` lifts that CI-lockout for PR-bot flows, but refuses (exit 3) on the repo's default branch — automated fixes may only land on a work branch that a human merges via PR. The same flags exist on `invigil check`.
+
 ```bash
 invigil score .
 invigil score /path/to/repo --format markdown --output score.md

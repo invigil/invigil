@@ -145,3 +145,43 @@ def test_cli_fix_ci_lockout(tmp_path, monkeypatch):
     monkeypatch.setenv("CI", "true")
     (tmp_path / "app.py").write_text("x = 1\n")
     assert cli.main(["check", "doors", str(tmp_path), "--fix"]) == 3
+
+
+# --- --pr-mode --------------------------------------------------------------
+def test_pr_mode_requires_fix(tmp_path):
+    with pytest.raises(SystemExit) as exc:
+        cli.main(["score", str(tmp_path), "--pr-mode"])
+    assert exc.value.code == 2
+
+
+def _branched_repo(tmp_path, branch):
+    _git(tmp_path, "init", "-b", "main")
+    _git(tmp_path, "config", "user.email", "t@t.t")
+    _git(tmp_path, "config", "user.name", "t")
+    (tmp_path / "app.py").write_text("x = 1\n")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-m", "c", "--no-verify")
+    if branch != "main":
+        _git(tmp_path, "switch", "-c", branch)
+
+
+def test_pr_mode_fixes_under_ci_on_work_branch(tmp_path, monkeypatch):
+    monkeypatch.setenv("CI", "true")
+    _branched_repo(tmp_path, "invigil/fixes")
+    rc = cli.main(["check", "doors", str(tmp_path), "--fix", "--pr-mode"])
+    assert rc != 3
+    assert (tmp_path / "CONTRIBUTING.md").exists()
+
+
+def test_pr_mode_refuses_default_branch(tmp_path, monkeypatch):
+    monkeypatch.setenv("CI", "true")
+    _branched_repo(tmp_path, "main")
+    assert cli.main(["check", "doors", str(tmp_path), "--fix", "--pr-mode"]) == 3
+    assert not (tmp_path / "CONTRIBUTING.md").exists()
+
+
+def test_scaffold_templates_recruit_agents():
+    from invigil.checks.fixes import AGENTS_MD, LLMS_TXT
+
+    assert "invigil evaluate" in AGENTS_MD
+    assert "invigil evaluate" in LLMS_TXT

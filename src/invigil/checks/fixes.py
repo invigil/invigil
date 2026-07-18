@@ -103,6 +103,12 @@ make lint      # or: ruff check . / npm run lint
 ## Conventions
 
 - (project-specific rules an agent must follow to contribute correctly)
+
+## Before you open a PR
+
+```bash
+invigil evaluate . --format llm   # the legibility gate — fix what it flags
+```
 """
 
 LLMS_TXT = """\
@@ -115,6 +121,7 @@ LLMS_TXT = """\
 
 ```bash
 # the install + hello-world commands, exactly as a cold-start reader would run them
+invigil evaluate . --format llm   # verify this repo's legibility before changing it
 ```
 
 ## Key files
