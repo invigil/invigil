@@ -72,6 +72,7 @@ One tool, four doors — pick the one that matches where you run it:
 | **GitHub Action** | GitHub PRs | `uses: invigil/invigil@v1` |
 | **Docker (ghcr)** | GitLab, Jenkins, any non-Python CI | `docker run --rm -v "$PWD:/repo" ghcr.io/invigil/invigil score /repo` |
 | **pre-commit** | offline checks on every commit | hooks `invigil-layout`, `invigil-secrets` (below) |
+| **MCP server** | agents (Claude Code, any MCP client) | `pip install "invigil[mcp]"` → `invigil mcp` |
 
 Every release ships all of it signed: cosign-signed wheel, sdist, and container image, plus an
 SPDX SBOM — verifiable with `cosign verify` against the GitHub OIDC identity.
@@ -106,6 +107,17 @@ jobs:
 
 Flip `enforce: "true"` (or set `project.enforce: true` in `.invigil.yml`) when you're ready for
 it to block merges below the target gate.
+
+The action exposes the rendered report and badge as step outputs — pipe the scorecard into the
+job summary or publish the badge JSON wherever shields.io can reach it:
+
+```yaml
+      - uses: invigil/invigil@v1
+        id: invigil
+        with: { comment: "false" }
+      - run: cat "${{ steps.invigil.outputs.report }}" >> "$GITHUB_STEP_SUMMARY"
+      # steps.invigil.outputs.badge → path to the shields.io endpoint JSON
+```
 
 ## How it works
 
@@ -228,6 +240,24 @@ actually act on them:
 Two artifacts fall out of it: an **`ai-ready` badge** (shields endpoint, emitted next to the
 grade badge by `--badges-dir`) and **`invigil score --format llm`** — a deterministic report
 under ~1 KB, built to be read *by* an agent: a healthy repo costs it two lines of context.
+
+### MCP server
+
+Agents don't have to shell out — Invigil speaks MCP natively (`mcp-name: io.github.invigil/invigil`):
+
+```bash
+pip install "invigil[mcp]"    # optional extra; the core CLI stays zero-dep
+invigil mcp                   # stdio server
+```
+
+```json
+// e.g. .mcp.json for Claude Code — any MCP client works
+{ "mcpServers": { "invigil": { "command": "uvx", "args": ["--from", "invigil[mcp]", "invigil", "mcp"] } } }
+```
+
+Three read-only tools: `evaluate_repo` (the scorecard, `llm` or `json` format),
+`check_group` (one fast offline group), and `preview_fixes` (the mutation plan `--fix`
+would apply — the agent applies changes with its own edit tools, so nothing here writes).
 
 ## The doctrine
 

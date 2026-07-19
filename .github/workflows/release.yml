@@ -36,7 +36,7 @@ jobs:
 
       - name: Build sdist + wheel
         run: |
-          pip install build
+          pip install --require-hashes -r .github/requirements/build.txt
           python -m build
 
       # Publish FIRST, while dist/ holds only the wheel + sdist. Signing (below)

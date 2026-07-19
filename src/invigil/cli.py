@@ -7,7 +7,8 @@ Exit codes:
     0  scorecard produced; gate satisfied (or report-only mode)
     1  --enforce (or config enforce=true) and below the min gate; or `--fix` changed files
     2  usage / IO error
-    3  `--fix` refused because it's running under CI (CI-lockout)
+    3  refused/unavailable: `--fix` under CI (CI-lockout), or `mcp` without
+       the optional [mcp] extra installed
 
 Report-first is the default: without --enforce the command always exits 0, so
 it can be wired into CI as a comment-and-badge step before it ever blocks a PR.
@@ -137,6 +138,8 @@ def main(argv: list[str] | None = None) -> int:
         "-q", "--quiet", action="store_true", help="print only FAIL lines, no summary — silence means the group passes"
     )
 
+    sub.add_parser("mcp", help='run the MCP server over stdio (needs: pip install "invigil[mcp]")')
+
     st_cmd = sub.add_parser("stranger", help="the Cold-Start Gate: boot published artifacts and probe them (Layer 2)")
     st_cmd.add_argument("path", nargs="?", default=".", help="repo path holding .invigil.yml (default: .)")
 
@@ -210,6 +213,20 @@ def main(argv: list[str] | None = None) -> int:
         if fails:
             return 1
         return 1 if changed else 0  # pre-commit: files were fixed+staged, re-commit
+
+    if args.cmd == "mcp":
+        try:
+            from .mcp_server import serve
+        except ImportError as exc:
+            if exc.name and exc.name.split(".")[0] == "mcp":
+                print(
+                    'invigil: the MCP server needs an optional dependency\n      fix: pip install "invigil[mcp]"',
+                    file=sys.stderr,
+                )
+                return 3
+            raise
+        serve()
+        return 0
 
     if args.cmd == "stranger":
         from .stranger import StrangerError, run

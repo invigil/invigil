@@ -21,7 +21,11 @@ invigil score . --format json   # machine-readable
 invigil evaluate . --format llm # token-economical: built for you, the agent (`evaluate` = `score`)
 ```
 
-GitHub Action: `uses: invigil/invigil@v1`.
+GitHub Action: `uses: invigil/invigil@v1` (step outputs: `report`, `badge`).
+
+MCP server (stdio): `pip install "invigil[mcp]"` then `invigil mcp` — tools
+`evaluate_repo`, `check_group`, `preview_fixes` (read-only; you apply the fixes).
+Registry name: io.github.invigil/invigil. Exit code 3 = the [mcp] extra is missing.
 
 ## Config
 

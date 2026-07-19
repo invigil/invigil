@@ -4,12 +4,33 @@ All notable changes to Invigil are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.7.0] - 2026-07-19
 
 ### Added
+- **`invigil mcp`** — a stdio MCP server so agents can call the gate as a native
+  tool. Three read-only tools: `evaluate_repo` (llm/json scorecard),
+  `check_group` (one fast offline group), `preview_fixes` (the dry-run mutation
+  plan; agents apply changes with their own edit tools). Ships as the optional
+  `[mcp]` extra — the core CLI stays zero-dep; without it, `invigil mcp` prints
+  the install fix and exits 3. Registry: `io.github.invigil/invigil`
+  (`server.json`).
 - `-q`/`--quiet` on `score`/`evaluate`/`check`: only FAIL/WARN lines, no header
   or summary — a fully passing run prints nothing. Closes #6; supersedes #12
   (thanks @gandzekas for the initiative).
+- `checks.disable` in `.invigil.yml` now accepts a plain YAML list as well as
+  the legacy mapping form; an empty `disable:` key no longer crashes the loader.
+  Closes #7 (thanks @leemeo3).
+
+### Fixed
+- **Action outputs (#13)**: `action.yml` now declares the top-level `outputs:`
+  block composite actions require — `steps.<id>.outputs.report` and `.badge`
+  were silently empty for every consumer. Found dogfooding Kaaval's CI.
+
+### Changed
+- Supply-chain hardening toward Scorecard ≥7: CI installs uv via the SHA-pinned
+  `astral-sh/setup-uv` action, and the release build installs `build` from a
+  hash-pinned requirements file (`--require-hashes`).
+- PyPI keywords + README/llms.txt now cover the MCP/agent surface.
 
 ## [1.6.0] - 2026-07-18
 
