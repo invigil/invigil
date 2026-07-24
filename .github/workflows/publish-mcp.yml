@@ -27,10 +27,11 @@ jobs:
       contents: read
       id-token: write   # OIDC token for the registry login
     steps:
+      # Deliberately checkout main, not the tag: server.json is registry
+      # metadata (description, run args) and the latest copy is authoritative.
+      # Only `version` is tag-specific — the sync step below sets it, and the
+      # registry then validates that exact version exists on PyPI.
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v4
-        with:
-          # workflow_run.head_branch is the tag name for tag-triggered runs.
-          ref: ${{ inputs.tag || github.event.workflow_run.head_branch }}
 
       - name: Install mcp-publisher (pinned + checksummed)
         run: |
