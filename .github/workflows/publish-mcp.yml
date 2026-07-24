@@ -1,0 +1,54 @@
+name: Publish to MCP Registry
+
+# OIDC auth makes the runner the publisher: the registry maps a GitHub Actions
+# token to the repo owner's namespace (io.github.invigil/*), so no user OAuth
+# grant — and no org OAuth-app-policy friction — is involved.
+on:
+  # Auto-publish after a successful Release (PyPI must exist first: the
+  # registry validates the package version + the mcp-name marker in its README).
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+  # Manual backfill for an already-released tag.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish (e.g. v1.7.0)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # OIDC token for the registry login
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v4
+        with:
+          # workflow_run.head_branch is the tag name for tag-triggered runs.
+          ref: ${{ inputs.tag || github.event.workflow_run.head_branch }}
+
+      - name: Install mcp-publisher (pinned + checksummed)
+        run: |
+          curl -fsSL -o mcp-publisher.tar.gz \
+            "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.0/mcp-publisher_linux_amd64.tar.gz"
+          echo "1370446bbe74d562608e8005a6ccce02d146a661fbd78674e11cc70b9618d6cf  mcp-publisher.tar.gz" | sha256sum -c -
+          tar xzf mcp-publisher.tar.gz mcp-publisher
+
+      - name: Sync server.json version to the tag
+        run: |
+          tag="${{ inputs.tag || github.event.workflow_run.head_branch }}"
+          ver="${tag#v}"
+          jq --arg v "$ver" '.version = $v | .packages[0].version = $v' server.json > server.tmp
+          mv server.tmp server.json
+          ./mcp-publisher validate
+
+      - name: Login (GitHub Actions OIDC)
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish
+        run: ./mcp-publisher publish
