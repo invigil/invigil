@@ -1,5 +1,5 @@
 name: "Invigil — Product Quality Gate"
-description: "Grade a repo's legibility to newcomers and AI agents — a scorecard PR comment with the exact fix for every failure."
+description: "Linters check your code. Invigil checks whether your repo is legible — to newcomers and to AI agents."
 author: "Vamshi Krishna Santhapuri"
 branding:
   icon: "eye"
@@ -36,6 +36,9 @@ outputs:
   badge:
     description: "Path to the shields.io badge JSON"
     value: ${{ steps.score.outputs.badge }}
+  ai-badge:
+    description: "Path to the ai-ready shields.io badge JSON"
+    value: ${{ steps.score.outputs.ai-badge }}
 
 runs:
   using: composite
@@ -55,10 +58,12 @@ runs:
       run: |
         cd "${{ inputs.path }}"
         invigil score . --format markdown --output "$RUNNER_TEMP/invigil-report.md"
-        invigil score . --format badge   --output "$RUNNER_TEMP/invigil-badge.json"
+        invigil score . --format badge    --output "$RUNNER_TEMP/invigil-badge.json"
+        invigil score . --format ai-badge --output "$RUNNER_TEMP/invigil-ai-badge.json"
         invigil score . --format text   # human-readable in the job log
         echo "report=$RUNNER_TEMP/invigil-report.md" >> "$GITHUB_OUTPUT"
         echo "badge=$RUNNER_TEMP/invigil-badge.json" >> "$GITHUB_OUTPUT"
+        echo "ai-badge=$RUNNER_TEMP/invigil-ai-badge.json" >> "$GITHUB_OUTPUT"
 
     - name: Comment on PR
       if: ${{ inputs.comment == 'true' && github.event_name == 'pull_request' }}

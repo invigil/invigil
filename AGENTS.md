@@ -17,7 +17,8 @@ invigil evaluate . --format llm              # dogfood: grade Invigil with Invig
 - `src/invigil/model.py` — Check / CheckResult / Scorecard, scoring + gate logic.
 - `src/invigil/context.py` — repo/git/gh/workflow helpers handed to every check.
 - `src/invigil/checks/gN_*.py` — checks grouped by Gate; each `@register(...)`-ed.
-- `src/invigil/report.py` — text/json/markdown/badge renderers.
+- `src/invigil/report.py` — text/json/markdown/badge/ai-badge/llm renderers (`RENDERERS`
+  is the single source for `--format` choices; adding a key adds the flag).
 - `src/invigil/cli.py` — the `invigil score` entry point.
 
 ## Conventions (do these or CI/self-score will reject the change)

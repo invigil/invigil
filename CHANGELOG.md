@@ -4,6 +4,24 @@ All notable changes to Invigil are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.7.1] - 2026-07-26
+
+### Added
+- **`invigil score --format ai-badge`** — the `ai-ready` shields.io endpoint badge
+  for a single repo. The renderer shipped in 1.6 but was only reachable through
+  `invigil portfolio --badges-dir`, so the badge the README told you to publish
+  could not actually be produced for your own repo.
+- **`ai-badge` output on the GitHub Action** — the `ai-ready` badge JSON alongside
+  the existing `report` and `badge` outputs.
+
+### Fixed
+- The copy-paste workflow snippets in the README are now SHA-pinned. As written
+  they used floating tags, so the first thing a new adopter pasted failed
+  Invigil's own `actions-sha-pinned` check.
+- README no longer documents `--badges-dir` as a `score` flag; it belongs to
+  `portfolio` and `score` now has `--format ai-badge` instead.
+- `docs/README.md` linked to four pages that were never written.
+
 ## [1.7.0] - 2026-07-19
 
 ### Added
