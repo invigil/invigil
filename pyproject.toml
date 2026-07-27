@@ -1,7 +1,7 @@
 [project]
 name = "invigil"
-version = "1.7.0"
-description = "A CI quality gate that grades a repo against a product-quality doctrine — not code style."
+version = "1.7.1"
+description = "Linters check your code. Invigil checks whether your repo is legible — to newcomers and to AI agents."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }

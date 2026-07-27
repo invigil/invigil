@@ -33,7 +33,9 @@ def smoke_published(ctx: Context) -> CheckResult:
         check,
         Status.FAIL,
         "no scheduled published-artifact smoke test",
-        "add a scheduled workflow (or `uses: invigil/invigil/.github/workflows/stranger-gate.yml@v1`) "
+        # Recommend the pinned form: the unpinned one would fail `actions-sha-pinned`,
+        # i.e. our own fix advice would break another of our own checks.
+        "add a scheduled workflow (or `uses: invigil/invigil/.github/workflows/stranger-gate.yml@<sha>`) "
         "that installs+boots the published artifact daily",
     )
 

@@ -172,4 +172,11 @@ def as_llm(sc: Scorecard) -> str:
     return "\n".join(lines)
 
 
-RENDERERS = {"text": as_text, "json": as_json, "markdown": as_markdown, "badge": as_badge, "llm": as_llm}
+RENDERERS = {
+    "text": as_text,
+    "json": as_json,
+    "markdown": as_markdown,
+    "badge": as_badge,
+    "ai-badge": as_ai_badge,
+    "llm": as_llm,
+}

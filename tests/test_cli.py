@@ -74,6 +74,16 @@ def test_main_json_format(tmp_path, capsys):
     assert data["repo"] == tmp_path.name
 
 
+def test_main_ai_badge_format(tmp_path, capsys):
+    # The renderer is unit-tested in test_report; this guards the CLI wiring —
+    # `as_ai_badge` existed for a release without being reachable from `score`.
+    make_good_repo(tmp_path)
+    assert cli.main(["score", str(tmp_path), "--format", "ai-badge"]) == 0
+    badge = json.loads(capsys.readouterr().out)
+    assert badge["label"] == "ai-ready"
+    assert badge["schemaVersion"] == 1
+
+
 def test_main_output_file(tmp_path):
     make_good_repo(tmp_path)
     out = tmp_path / "card.md"

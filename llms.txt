@@ -1,9 +1,9 @@
 # Invigil
 
-> A CI quality gate that grades a repo's legibility — not code style. It turns the
-> promises a cold-start reader (human or AI agent) relies on ("boots in 10 minutes",
-> "every error tells the fix", "README stays a landing page", "the published artifact
-> still installs today") into mechanical, exact-fix-reporting checks, and runs them in CI.
+> Linters check your code. Invigil checks whether your repo is legible — to newcomers
+> and to AI agents. It turns the promises a cold-start reader relies on ("boots in 10
+> minutes", "every error tells the fix", "README stays a landing page", "the published
+> artifact still installs today") into mechanical, exact-fix-reporting checks run in CI.
 
 ## What it does
 
@@ -21,7 +21,8 @@ invigil score . --format json   # machine-readable
 invigil evaluate . --format llm # token-economical: built for you, the agent (`evaluate` = `score`)
 ```
 
-GitHub Action: `uses: invigil/invigil@v1` (step outputs: `report`, `badge`).
+GitHub Action: `uses: invigil/invigil@<sha>` (step outputs: `report`, `badge`, `ai-badge`).
+Pin the SHA — the `actions-sha-pinned` check fails floating tags, including Invigil's own.
 
 MCP server (stdio): `pip install "invigil[mcp]"` then `invigil mcp` — tools
 `evaluate_repo`, `check_group`, `preview_fixes` (read-only; you apply the fixes).
@@ -34,6 +35,6 @@ target gate, which checks to disable, and the artifacts/probes the Cold-Start Ga
 
 ## Key files
 
-- CLI: src/invigil/cli.py — `invigil score [PATH] --format text|json|markdown|badge`
+- CLI: src/invigil/cli.py — `invigil score [PATH] --format text|json|markdown|badge|ai-badge|llm`
 - Checks: src/invigil/checks/*.py (grouped by gate)
 - Reporters: src/invigil/report.py

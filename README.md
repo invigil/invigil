@@ -1,6 +1,6 @@
 # Invigil
 
-**A CI quality gate that grades a repo against a product-quality *doctrine* — not code style.**
+**Linters check your code. Invigil checks whether your project is legible.**
 
 [![CI](https://github.com/invigil/invigil/actions/workflows/ci.yml/badge.svg)](https://github.com/invigil/invigil/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
@@ -11,18 +11,19 @@
 [![Invigil grade](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/invigil/invigil/main/badges/invigil.json)](https://github.com/invigil/invigil)
 [![AI-ready](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/invigil/invigil/main/badges/invigil-ai.json)](https://github.com/invigil/invigil#when-your-user-is-an-agent)
 
-Linters check your *code*. Dependabot checks your *dependencies*. **Nothing checks whether
-your project is legible — whether someone arriving cold can act on it:** boot it in ten
-minutes, get an error that tells them the fix, install the thing on PyPI *today*, read a
+Ruff has your syntax. Dependabot has your dependencies. Scorecard has your supply chain.
+**Nothing checks whether someone arriving cold can act on the project:** boot it in ten
+minutes, get an error that tells them the fix, install the thing from PyPI *today*, read a
 README that's still a landing page and not a 600-line wall.
 
-That is the test every open-source project takes when someone new finds it — a new engineer,
-or increasingly an AI agent with a context window instead of patience. If they can't get to
-"hello world" in 10 minutes, they leave. If the artifact on PyPI is broken because CI only
-tests the source tree, they leave. If the error message is a silent stack trace, they leave.
+That's the test every project takes when someone new finds it — a new engineer, or
+increasingly an AI agent with a context window instead of patience. If they can't reach
+"hello world" in 10 minutes, they leave. If the published artifact is broken because CI
+only tests the source tree, they leave. If the error is a silent stack trace, they leave.
+Nobody files an issue on the way out.
 
-Invigil turns those promises into mechanical, exact-fix-reporting checks and runs them in CI —
-so the project speaks for itself.
+Invigil turns those promises into mechanical checks, runs them in CI, and prints the exact
+fix for every failure — so the project speaks for itself.
 
 > *invigilate* — to watch over an exam and enforce its rules.
 
@@ -99,8 +100,8 @@ jobs:
   invigil:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: invigil/invigil@v1        # the doctrine scorecard
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1        # v7.0.1
+      - uses: invigil/invigil@bf10187dc041d1afb15d5d4cd7a270ef2182b47e        # v1.7.0
         with:
           enforce: "false"              # flip to true once the grade is stable
 ```
@@ -108,15 +109,19 @@ jobs:
 Flip `enforce: "true"` (or set `project.enforce: true` in `.invigil.yml`) when you're ready for
 it to block merges below the target gate.
 
-The action exposes the rendered report and badge as step outputs — pipe the scorecard into the
-job summary or publish the badge JSON wherever shields.io can reach it:
+> **Why the SHAs?** `invigil/invigil@v1` works and tracks the latest v1.x.y, but Invigil's own
+> `actions-sha-pinned` check (G3) fails floating tags — including its own. Pin, and let
+> Dependabot bump the pins; the trailing comment is what it reads.
+
+The action exposes the report and both badges as step outputs — pipe the scorecard into the job
+summary, publish the badge JSON wherever shields.io can reach it:
 
 ```yaml
-      - uses: invigil/invigil@v1
+      - uses: invigil/invigil@bf10187dc041d1afb15d5d4cd7a270ef2182b47e        # v1.7.0
         id: invigil
         with: { comment: "false" }
       - run: cat "${{ steps.invigil.outputs.report }}" >> "$GITHUB_STEP_SUMMARY"
-      # steps.invigil.outputs.badge → path to the shields.io endpoint JSON
+      # outputs.badge → grade badge JSON · outputs.ai-badge → ai-ready badge JSON
 ```
 
 ## How it works
@@ -142,7 +147,7 @@ on:
   workflow_dispatch:
 jobs:
   stranger:
-    uses: invigil/invigil/.github/workflows/stranger-gate.yml@v1
+    uses: invigil/invigil/.github/workflows/stranger-gate.yml@bf10187dc041d1afb15d5d4cd7a270ef2182b47e  # v1.7.0
 ```
 
 ### Fix by PR (Dependabot-for-legibility)
@@ -161,7 +166,7 @@ on:
   workflow_dispatch:
 jobs:
   fix:
-    uses: invigil/invigil/.github/workflows/fix-pr.yml@v1
+    uses: invigil/invigil/.github/workflows/fix-pr.yml@bf10187dc041d1afb15d5d4cd7a270ef2182b47e  # v1.7.0
 ```
 
 Under the hood it runs `invigil score --fix --pr-mode`: the fix engine's CI-lockout stays
@@ -210,14 +215,12 @@ A gate developers bypass is dead weight, so Invigil is built for zero friction:
 
   Heavier, network-bound checks (`scorecard`, the Cold-Start Gate) stay in CI.
   `invigil score --offline` / `--layer local` / `--group supply-chain` slice it any way.
-- **Profiles, so it bends instead of forking.** `profile: strict | progressive | light`, plus
-  per-check `weights`, `optional` (ding without gating), and `thresholds.fail_on`. Make it your
-  doctrine, not a hardcoded one.
-- **Resilient by design.** A scorecard.dev timeout is a SKIP that's excluded from the grade —
-  never a false A-to-C downgrade, never a crashed build.
-- **AI-era native.** The `ai` group checks that your `llms.txt`/`AGENTS.md` leak no secrets and
-  that agent code declares its tool inventory — the first slice of "what's the blast radius if
-  this agent is prompt-injected?"
+- **It bends instead of forking.** `profile: strict | progressive | light`, per-check
+  `weights`, `optional` (ding without gating), `thresholds.fail_on` — make it *your* doctrine.
+- **Resilient by design.** A scorecard.dev timeout is a SKIP excluded from the grade — never a
+  false A-to-C downgrade, never a crashed build.
+
+  → [The doctrine and the Gates](docs/doctrine.md) covers both in full.
 
 ## When your user is an agent
 
@@ -237,9 +240,19 @@ actually act on them:
 | `llms-no-secrets` | The machine-readable surface leaks no credentials |
 | `agent-scope-visibility` | Agent code declares its tool inventory (blast-radius precondition) |
 
-Two artifacts fall out of it: an **`ai-ready` badge** (shields endpoint, emitted next to the
-grade badge by `--badges-dir`) and **`invigil score --format llm`** — a deterministic report
-under ~1 KB, built to be read *by* an agent: a healthy repo costs it two lines of context.
+Two artifacts fall out of it. **`invigil score --format llm`** — a deterministic report under
+~1 KB, built to be read *by* an agent: a healthy repo costs it two lines of context. And an
+**`ai-ready` badge**, a shields.io endpoint you can put in your own README:
+
+```bash
+invigil score . --format ai-badge --output badges/ai-ready.json   # commit this
+```
+
+```markdown
+![AI-ready](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/OWNER/REPO/main/badges/ai-ready.json)
+```
+
+In CI the Action emits it for you — `steps.<id>.outputs.ai-badge` is the path to the same JSON.
 
 ### MCP server
 
@@ -261,10 +274,9 @@ would apply — the agent applies changes with its own edit tools, so nothing he
 
 ## The doctrine
 
-Invigil encodes a specific product-quality doctrine (the Silent User Doctrine and its Five
-Disciplines): *absence of complaints is not absence of problems — silence is the loudest
-negative signal a project gets.* You test at release time; users arrive after dependencies
-drift and registries change. Only automation is awake then. Invigil is that automation.
+*Absence of complaints is not absence of problems — silence is the loudest negative signal a
+project gets.* That's the Silent User Doctrine, and Invigil is its enforcement:
+[what the Gates mean and how to tune them](docs/doctrine.md).
 
 ## Contributing
 
