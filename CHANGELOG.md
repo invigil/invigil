@@ -4,7 +4,7 @@ All notable changes to Invigil are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
-## [1.7.1] - 2026-07-26
+## [1.7.1] - 2026-07-27
 
 ### Added
 - **`invigil score --format ai-badge`** — the `ai-ready` shields.io endpoint badge
