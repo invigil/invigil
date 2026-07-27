@@ -31,7 +31,7 @@ jobs:
       # metadata (description, run args) and the latest copy is authoritative.
       # Only `version` is tag-specific — the sync step below sets it, and the
       # registry then validates that exact version exists on PyPI.
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Install mcp-publisher (pinned + checksummed)
         run: |
