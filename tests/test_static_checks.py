@@ -7,6 +7,9 @@ remote, which is the behavior we assert — no network is touched in tests.
 import subprocess
 from pathlib import Path
 
+import pytest
+
+from invigil.checks import ai_native
 from invigil.checks import g2_errors as g2
 from invigil.checks import g3_supply as g3
 from invigil.checks import g4_evidence as g4
@@ -135,6 +138,27 @@ def test_g5_doors(tmp_path):
     assert g5.contributor_door(ctx(tmp_path)).status is Status.PASS
     assert g5.ai_door(ctx(tmp_path)).status is Status.PASS
     assert g5.docs_index(ctx(tmp_path)).status is Status.PASS
+
+
+# Regression: ai-door used to accept only llms.txt / AGENTS.md, so a repo with a
+# CLAUDE.md (microsoft/playwright-python) was simultaneously "has agent context"
+# to agents-md-actionable and "has no AI door" to ai-door. Two checks in one group
+# must not disagree about what an agent door is.
+@pytest.mark.parametrize("name", ["CLAUDE.md", "AGENTS.md", "llms.txt", ".cursorrules"])
+def test_ai_door_accepts_every_agent_context_file(tmp_path, name):
+    p = tmp_path / name
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text("agent context\n")
+    r = g5.ai_door(ctx(tmp_path))
+    assert r.status is Status.PASS
+    assert name in r.detail
+
+
+def test_ai_door_agrees_with_agents_md_actionable(tmp_path):
+    # The shared constant is the contract: whatever ai_native treats as agent
+    # context, ai-door must count as a door.
+    for name in ai_native.AGENT_CONTEXT_FILES:
+        assert name in g5.AI_DOOR_FILES, f"{name} is agent context but not an AI door"
 
 
 def test_good_first_issues_skips_without_remote(tmp_path):

@@ -53,6 +53,34 @@ def test_quickstart_detected(tmp_path):
     assert g1.readme_quickstart(ctx(tmp_path)).status is Status.PASS
 
 
+# Regression: aws/aws-cli ships a README.rst whose "Getting Started" section is a
+# real heading, and Invigil reported "no quickstart heading" — a false positive on
+# every non-Markdown README. The reader does not care which markup you chose.
+def test_quickstart_detected_in_rst(tmp_path):
+    (tmp_path / "README.rst").write_text(
+        "aws-cli\n=======\n\nSome prose.\n\nGetting Started\n---------------\n\nInstall it.\n"
+    )
+    r = g1.readme_quickstart(ctx(tmp_path))
+    assert r.status is Status.PASS
+    assert "README.rst" in r.detail
+
+
+def test_quickstart_rst_prose_mention_is_not_a_heading(tmp_path):
+    # The word appearing in a sentence must not count — only an underlined title does.
+    (tmp_path / "README.rst").write_text("aws-cli\n=======\n\nSee getting started elsewhere.\n")
+    assert g1.readme_quickstart(ctx(tmp_path)).status is Status.FAIL
+
+
+def test_quickstart_any_markdown_heading_level(tmp_path):
+    (tmp_path / "README.md").write_text("# App\n\n### Installation\n\n```\npip install app\n```\n")
+    assert g1.readme_quickstart(ctx(tmp_path)).status is Status.PASS
+
+
+def test_quickstart_skips_when_no_readme(tmp_path):
+    # Absence of a README is readme-present's failure to report, not this check's.
+    assert g1.readme_quickstart(ctx(tmp_path)).status is Status.SKIP
+
+
 def test_env_example_skips_when_no_surface(tmp_path):
     assert g1.env_example(ctx(tmp_path)).status is Status.SKIP
 
