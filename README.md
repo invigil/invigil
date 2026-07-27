@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1        # v7.0.1
-      - uses: invigil/invigil@bf10187dc041d1afb15d5d4cd7a270ef2182b47e        # v1.7.0
+      - uses: invigil/invigil@7f31330715bb7e42f26032ce3e921fcf78d4acea        # v1.7.1
         with:
           enforce: "false"              # flip to true once the grade is stable
 ```
@@ -117,7 +117,7 @@ The action exposes the report and both badges as step outputs — pipe the score
 summary, publish the badge JSON wherever shields.io can reach it:
 
 ```yaml
-      - uses: invigil/invigil@bf10187dc041d1afb15d5d4cd7a270ef2182b47e        # v1.7.0
+      - uses: invigil/invigil@7f31330715bb7e42f26032ce3e921fcf78d4acea        # v1.7.1
         id: invigil
         with: { comment: "false" }
       - run: cat "${{ steps.invigil.outputs.report }}" >> "$GITHUB_STEP_SUMMARY"
@@ -147,7 +147,7 @@ on:
   workflow_dispatch:
 jobs:
   stranger:
-    uses: invigil/invigil/.github/workflows/stranger-gate.yml@bf10187dc041d1afb15d5d4cd7a270ef2182b47e  # v1.7.0
+    uses: invigil/invigil/.github/workflows/stranger-gate.yml@7f31330715bb7e42f26032ce3e921fcf78d4acea  # v1.7.1
 ```
 
 ### Fix by PR (Dependabot-for-legibility)
@@ -166,7 +166,7 @@ on:
   workflow_dispatch:
 jobs:
   fix:
-    uses: invigil/invigil/.github/workflows/fix-pr.yml@bf10187dc041d1afb15d5d4cd7a270ef2182b47e  # v1.7.0
+    uses: invigil/invigil/.github/workflows/fix-pr.yml@7f31330715bb7e42f26032ce3e921fcf78d4acea  # v1.7.1
 ```
 
 Under the hood it runs `invigil score --fix --pr-mode`: the fix engine's CI-lockout stays
