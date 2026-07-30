@@ -9,8 +9,8 @@
     "version": { "type": "integer", "enum": [1] },
     "profile": {
       "type": "string",
-      "enum": ["strict", "progressive", "light"],
-      "description": "Baseline posture: strict (enforce at G4), progressive (report-first, fail_on G3), light (local-only, advisory)."
+      "enum": ["strict", "progressive", "light", "audit"],
+      "description": "Baseline posture: strict (enforce at G4), progressive (report-first, fail_on G3), light (local-only, advisory), audit (for repos you don't own: never fails a build, house-style checks report at weight 0)."
     },
     "project": {
       "type": "object",
