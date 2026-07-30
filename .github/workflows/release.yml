@@ -42,7 +42,7 @@ jobs:
       # Publish FIRST, while dist/ holds only the wheel + sdist. Signing (below)
       # writes .sig/.pem into dist/, which the PyPI upload would otherwise reject.
       - name: Publish to PyPI (trusted publishing)
-        uses: pypa/gh-action-pypi-publish@67339c736fd9354cd4f8cb0b744f2b82a74b5c70  # v1.12.3
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2
 
       - name: Generate SBOM (SPDX)
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610  # v0.24.0
