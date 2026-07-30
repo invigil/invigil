@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 
-from .model import GATE_SHORT_TITLES, GATE_TITLES, Scorecard, Status
+from .model import DOCTRINE_VERSION, GATE_SHORT_TITLES, GATE_TITLES, Scorecard, Status
 
 _EFFORT_ORDER = {"minutes": 0, "hours": 1, "days": 2, "": 3}
 
@@ -60,6 +60,8 @@ def as_json(sc: Scorecard) -> str:
     return json.dumps(
         {
             "repo": sc.repo,
+            # Lets a consumer tell "this repo regressed" apart from "the ruler moved".
+            "doctrine_version": DOCTRINE_VERSION,
             "gate": sc.gate_level(),
             "grade": sc.grade(),
             "earned": sc.earned,
@@ -157,7 +159,7 @@ def as_llm(sc: Scorecard) -> str:
     ai_pass, ai_app = sc.ai_readiness()
     lines = [
         f"invigil repo={sc.repo} gate={sc.gate_level()} grade={sc.grade()} "
-        f"score={sc.earned}/{sc.possible} ai_ready={ai_pass}/{ai_app}"
+        f"score={sc.earned}/{sc.possible} ai_ready={ai_pass}/{ai_app} doctrine={DOCTRINE_VERSION}"
     ]
     for r in sorted(sc.failures(), key=lambda r: (_EFFORT_ORDER.get(r.check.effort, 3), r.check.id)):
         lines.append(f"FAIL {r.check.id} | {r.detail} | fix: {r.fix}")

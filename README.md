@@ -278,6 +278,13 @@ would apply — the agent applies changes with its own edit tools, so nothing he
 project gets.* That's the Silent User Doctrine, and Invigil is its enforcement:
 [what the Gates mean and how to tune them](docs/doctrine.md).
 
+## Stability
+
+Invigil is **Alpha**, and [`docs/stability.md`](docs/stability.md) says exactly what that
+buys you: the CLI, exit codes, JSON shape, badge JSON and MCP tools are stable enough to
+automate against; individual check verdicts are not, and every report carries a
+`doctrine_version` so you can tell *your repo regressed* from *the ruler moved*.
+
 ## Contributing
 
 Issues and PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) and

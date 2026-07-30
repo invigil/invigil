@@ -20,6 +20,16 @@ class Status(StrEnum):
     SKIP = "skip"
 
 
+# The doctrine's own version, independent of the package version. Bump it whenever
+# a change could move a repo's verdict without that repo changing: check semantics,
+# weights, mandatory/gate assignment, or adding/removing a check.
+#
+# Invigil is Alpha precisely because this number is expected to move (see
+# docs/stability.md). Emitting it makes that motion *detectable* rather than silent:
+# a consumer who stores a scorecard can tell "our repo regressed" apart from "the
+# ruler changed", which is a distinction they cannot otherwise make.
+DOCTRINE_VERSION = 1
+
 # Ordered gates, lowest first. A repo "reaches" Gn only when every mandatory
 # check tagged for gates <= n passes. See QUALITY-PLAYBOOK.md "The Gates".
 GATES = ["G1", "G2", "G3", "G4", "G5", "G6", "G7"]
