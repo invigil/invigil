@@ -15,6 +15,9 @@ permissions:
 jobs:
   stranger:
     name: Boot published invigil from a cold start
-    uses: invigil/invigil/.github/workflows/stranger-gate.yml@6e5a0a8ed24edd88ba9e59b235044a78ad56e8ab  # v1
+    # Self-referencing pins track a *release tag* SHA, never whatever `main` happened to
+    # be that morning: `actions-sha-pinned` reads the trailing comment, so pinning a bot
+    # commit and labelling it `# v1` is false supply-chain evidence about ourselves.
+    uses: invigil/invigil/.github/workflows/stranger-gate.yml@7f31330715bb7e42f26032ce3e921fcf78d4acea  # v1.7.1
     with:
       path: "."

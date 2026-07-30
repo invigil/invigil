@@ -10,7 +10,7 @@ name: Fix by PR (reusable)
 # Consumer usage (monthly beats weekly — these are one-time scaffolds, not deps):
 #   jobs:
 #     fix:
-#       uses: invigil/invigil/.github/workflows/fix-pr.yml@v1
+#       uses: invigil/invigil/.github/workflows/fix-pr.yml@7f31330715bb7e42f26032ce3e921fcf78d4acea  # v1.7.1
 #   on:
 #     schedule: [{ cron: "0 6 1 * *" }]
 #     workflow_dispatch:
