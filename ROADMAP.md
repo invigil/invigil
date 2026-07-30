@@ -42,12 +42,15 @@ deferred until there is a real external plugin author.
 
 ## Phase C — org topology 🟡 (scaffolded)
 
-Sibling repos exist under `github.com/invigil` (`github-action`, `invigil.dev`,
-`plugin-template`, `awesome-invigil`) and the three teams are created (`core-maintainers`,
-`ecosystem-reviewers`, `automation-bots`). Pending: real content in each repo (docs site
-deploy, working plugin-template CI, catalog criteria), branch protection + CODEOWNERS, and a
-decision on whether `github-action` stays (the core repo's `action.yml` already serves
-`uses: invigil/invigil@v1`).
+Sibling repos exist under `github.com/invigil` (`invigil.dev`, `plugin-template`,
+`awesome-invigil`) and the three teams are created (`core-maintainers`,
+`ecosystem-reviewers`, `automation-bots`). **All three are private as of 2026-07-30** —
+they were public scaffolds with no content, which is the silent failure this project exists
+to catch. Each goes public when it has something to say. `github-action` is **retired**: the
+core repo's `action.yml` already serves `uses: invigil/invigil@v1` and backs the Marketplace
+listing, so a second action repo could only drift out of sync (see `ARCHITECTURE.md`).
+Pending: real content in each repo (docs site deploy, working plugin-template CI, catalog
+criteria), branch protection + CODEOWNERS.
 
 ## Phase E — AI-legibility ✅ (shipped v1.5.0)
 
@@ -76,7 +79,7 @@ hosted GitHub App (`invigil[bot]`, Checks API annotations) — waits for adoptio
 ## Maturity criteria (Invigil grading itself)
 
 Invigil is category-credible when it passes its own gates: **G3** requires v1.3.0 published on
-PyPI + GHCR with nightly smoke green; **G4** requires OpenSSF Scorecard ≥ 7 (signing and SBOM
-done; today's score is 5.2 — branch protection, workflow token permissions, SAST, and full
-dependency pinning are the actionable gaps, while Maintained/Contributors need calendar time);
-**G5** (all five doors documented).
+PyPI + GHCR with nightly smoke green; **G4** requires OpenSSF Scorecard ≥ 7 — **met: 7.2 on
+the 2026-07-30 crawl** (signing, SBOM, SHA-pinned actions and hash-pinned build requirements
+all landed; watch for regressions when workflows change — a new unpinned `pip install` slips
+the score); **G5** (all five doors documented).

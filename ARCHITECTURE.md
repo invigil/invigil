@@ -19,16 +19,26 @@ domain-driven repositories.
 ```
 github.com/invigil/
 ├── invigil           # ✅ Core Python engine, CLI, base profiles, Docker recipe, Action
-├── github-action     # ⬜ Isolated GitHub Marketplace deployment wrapper
-├── invigil.dev       # ⬜ Static docs site for the Silent User Doctrine
-├── plugin-template    # ⬜ Boilerplate repo for third-party plugin developers
-└── awesome-invigil   # ⬜ Community-curated catalog of verified profiles and plugins
+├── invigil.dev       # 🔒 Static docs site for the Silent User Doctrine
+├── plugin-template    # 🔒 Boilerplate repo for third-party plugin developers
+└── awesome-invigil   # 🔒 Community-curated catalog of verified profiles and plugins
 ```
+
+**Only `invigil/invigil` is public.** The planned repos above are **private until they have
+real content** (2026-07-30). A public repo that is an empty scaffold is precisely the silent
+failure this project exists to catch — a stranger who opens `awesome-invigil` and finds an
+empty catalog has learned something true about the project, and it isn't flattering. Each
+goes public on the day it has something to say.
+
+**`github-action` is retired** (private, 2026-07-30). It was scoped as an isolated
+Marketplace wrapper, but the core repo's own `action.yml` already serves
+`uses: invigil/invigil@v1` and is what the Marketplace listing points at, so a second
+action repo could only ever drift out of sync with it. One action, one source of truth.
 
 ### Teams & permissions
 - **@invigil/core-maintainers** — full admin/write across all repos; handles release signing.
-- **@invigil/ecosystem-reviewers** — write to `awesome-invigil` and `plugin-template`; audit
-  third-party plugin submissions.
+- **@invigil/ecosystem-reviewers** — write to `awesome-invigil` and `plugin-template` (both
+  private for now); audit third-party plugin submissions.
 - **@invigil/automation-bots** — machine users bound to OIDC for automated registry pushes.
 
 ---

@@ -104,7 +104,13 @@ def _run_fixes(repo: Path, config: InvigilConfig, results: list, *, pr_mode: boo
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="invigil", description="Grade a repo against the quality doctrine.")
+    # The one-line framing leads here too: `--help` is the first thing a stranger
+    # (or an agent) reads, and "grade your repo" is the framing we retired in 1.7.1.
+    parser = argparse.ArgumentParser(
+        prog="invigil",
+        description="Linters check your code. Invigil checks whether your repo is legible — "
+        "to newcomers and to AI agents.",
+    )
     parser.add_argument("--version", action="version", version=f"invigil {__version__}")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
