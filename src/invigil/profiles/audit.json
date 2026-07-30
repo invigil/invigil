@@ -1,0 +1,22 @@
+{
+  "_comment": "audit — for scoring a repo you do not own. Never fails a build. A check keeps its weight only if any maintainer would concede the finding without first adopting Invigil's doctrine; house-style checks drop to weight 0, so they still report as suggestions but cannot drag the grade. Opinions that are real findings but should not collapse the gate ladder are demoted from mandatory instead. Use `strict` on your own repo — we hold ourselves to more than we ask of you.",
+  "only_layers": null,
+  "offline": false,
+  "fail_on": null,
+  "advisory_all": false,
+  "optional_ids": [
+    "readme-length",
+    "readme-quickstart",
+    "coverage-gate",
+    "deep-health",
+    "error-correlation-id",
+    "scorecard-workflow"
+  ],
+  "weights": {
+    "env-example": 0,
+    "docs-index": 0,
+    "operator-door": 0,
+    "good-first-issues": 0,
+    "code-of-conduct": 0
+  }
+}

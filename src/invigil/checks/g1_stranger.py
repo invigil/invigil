@@ -8,6 +8,8 @@ proven dynamically by the Stranger Gate; these are its static preconditions.
 
 from __future__ import annotations
 
+import re
+
 from ..context import Context
 from ..model import CheckResult, Status
 from . import register
@@ -101,16 +103,53 @@ def readme_length(ctx: Context) -> CheckResult:
     )
 
 
+# Headings that mean "start here". Matched against Markdown (`## Quick Start`) and
+# reStructuredText (a title underlined by a punctuation rule) alike — a README.rst
+# that says "Getting Started" has the section, whatever the markup.
+QUICKSTART_HEADINGS = (
+    "quick start",
+    "quickstart",
+    "getting started",
+    "installation",
+    "install",
+    "usage",
+)
+
+# RST underlines a title with a run of one punctuation char: ===, ---, ~~~, ^^^ ...
+_RST_UNDERLINE = re.compile(r"^([=\-~^\"'`#*+_:.])\1{2,}\s*$")
+
+
+def _has_quickstart_heading(text: str) -> bool:
+    """True if any 'start here' heading appears as a real heading in Markdown or RST."""
+    lines = text.splitlines()
+    for i, raw in enumerate(lines):
+        line = raw.strip().lower()
+        if not line:
+            continue
+        # Markdown: any ATX level, so `# Install` and `### Quick Start` both count.
+        if line.startswith("#"):
+            if any(h in line.lstrip("#").strip() for h in QUICKSTART_HEADINGS):
+                return True
+            continue
+        # RST/setext: the heading is this line, the *next* line is the rule.
+        if i + 1 < len(lines) and _RST_UNDERLINE.match(lines[i + 1].strip()):
+            if any(h in line for h in QUICKSTART_HEADINGS):
+                return True
+    return False
+
+
 @register(id="readme-quickstart", gate="G1", title="README has a Quick Start section", weight=1, discipline="D1")
 def readme_quickstart(ctx: Context) -> CheckResult:
     check = readme_quickstart.__invigil__  # type: ignore[attr-defined]
-    text = ctx.read("README.md").lower()
-    if any(h in text for h in ("## quick start", "## quickstart", "## getting started", "## install")):
-        return CheckResult(check, Status.PASS, "quickstart heading found")
+    p = ctx.first_existing("README.md", "README.rst", "README")
+    if p is None:
+        return CheckResult(check, Status.SKIP, "no README (presence is readme-present's call)")
+    if _has_quickstart_heading(p.read_text(errors="replace")):
+        return CheckResult(check, Status.PASS, f"quickstart heading found in {p.name}")
     return CheckResult(
         check,
         Status.FAIL,
-        "no quickstart heading",
+        f"no quickstart heading in {p.name}",
         'add a "## Quick Start" section with <=5 copy-paste commands to first success',
     )
 

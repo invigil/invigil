@@ -12,6 +12,13 @@ from __future__ import annotations
 from ..context import Context
 from ..model import CheckResult, Status
 from . import register
+from .ai_native import AGENT_CONTEXT_FILES
+
+# The machine-readable entrances an agent actually looks for. `llms.txt` is the
+# published-site convention; AGENT_CONTEXT_FILES is the in-repo convention, and it
+# is shared with the ai_native checks on purpose — if ai-door and
+# agents-md-actionable disagreed about what counts, one of them would be lying.
+AI_DOOR_FILES = ("llms.txt", "llms-full.txt", *AGENT_CONTEXT_FILES)
 
 
 @register(id="docs-index", gate="G5", title="docs/ has an index", weight=1, mandatory=False, discipline="D5")
@@ -75,8 +82,9 @@ def operator_door(ctx: Context) -> CheckResult:
 @register(id="ai-door", gate="G5", title="AI door: llms.txt / AGENTS.md", weight=1, mandatory=False, discipline="D5")
 def ai_door(ctx: Context) -> CheckResult:
     check = ai_door.__invigil__  # type: ignore[attr-defined]
-    if ctx.first_existing("llms.txt", "llms-full.txt", "AGENTS.md"):
-        return CheckResult(check, Status.PASS, "machine-readable entry present")
+    p = ctx.first_existing(*AI_DOOR_FILES)
+    if p:
+        return CheckResult(check, Status.PASS, f"machine-readable entry present ({p.name})")
     return CheckResult(
         check,
         Status.FAIL,

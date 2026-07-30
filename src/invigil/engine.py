@@ -14,18 +14,37 @@ from __future__ import annotations
 import importlib.resources
 import json
 import logging
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 
 from .config import InvigilConfig
 from .model import Check
 
 log = logging.getLogger(__name__)
 
-# profile -> (only_layers, offline, default fail_on, all-checks-advisory)
-PROFILES: dict[str, tuple[set[str] | None, bool, str | None, bool]] = {
-    "strict": (None, False, "G4", False),
-    "progressive": (None, False, "G3", False),
-    "light": ({"local"}, True, None, True),
+
+@dataclass(frozen=True)
+class ProfileSpec:
+    """A named scoring posture.
+
+    `optional_ids` demotes a check from mandatory (it stops gating), while a
+    `weights` entry of 0 removes it from the score entirely — the check still
+    runs and still reports, it just stops moving the grade. That split is what
+    lets `audit` report Invigil's house-style checks as suggestions without
+    letting them drag a third-party repo's letter down.
+    """
+
+    only_layers: set[str] | None = None
+    offline: bool = False
+    fail_on: str | None = None
+    advisory_all: bool = False
+    optional_ids: frozenset[str] = frozenset()
+    weights: dict[str, int] = field(default_factory=dict)
+
+
+PROFILES: dict[str, ProfileSpec] = {
+    "strict": ProfileSpec(fail_on="G4"),
+    "progressive": ProfileSpec(fail_on="G3"),
+    "light": ProfileSpec(only_layers={"local"}, offline=True, advisory_all=True),
 }
 DEFAULT_PROFILE = "progressive"
 
@@ -40,11 +59,13 @@ def _load_profiles_json():
                 data = json.loads(resource.read_text())
                 name = resource.name[:-5]
                 layers = set(data["only_layers"]) if data.get("only_layers") else None
-                PROFILES[name] = (
-                    layers,
-                    bool(data.get("offline", False)),
-                    data.get("fail_on"),
-                    bool(data.get("advisory_all", False)),
+                PROFILES[name] = ProfileSpec(
+                    only_layers=layers,
+                    offline=bool(data.get("offline", False)),
+                    fail_on=data.get("fail_on"),
+                    advisory_all=bool(data.get("advisory_all", False)),
+                    optional_ids=frozenset(data.get("optional_ids") or ()),
+                    weights={str(k): int(v) for k, v in (data.get("weights") or {}).items()},
                 )
     except Exception as exc:
         log.warning("failed to load JSON profiles: %s", exc)
@@ -74,15 +95,16 @@ class Effective:
 
 
 def resolve(config: InvigilConfig) -> Effective:
-    only_layers, offline, fail_on, advisory = PROFILES.get(config.profile, PROFILES[DEFAULT_PROFILE])
+    spec = PROFILES.get(config.profile, PROFILES[DEFAULT_PROFILE])
     # config's explicit threshold wins over the profile default
-    if config.fail_on:
-        fail_on = config.fail_on
+    fail_on = config.fail_on or spec.fail_on
+    # The repo's own .invigil.yml is the last word: profile values are the
+    # baseline, anything set locally overrides it.
     return Effective(
-        only_layers=only_layers,
-        offline=offline,
+        only_layers=spec.only_layers,
+        offline=spec.offline,
         fail_on=fail_on,
-        advisory_all=advisory,
-        optional_ids=set(config.optional_checks),
-        weights=dict(config.weights),
+        advisory_all=spec.advisory_all,
+        optional_ids=set(spec.optional_ids) | set(config.optional_checks),
+        weights={**spec.weights, **config.weights},
     )
