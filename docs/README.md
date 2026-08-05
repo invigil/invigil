@@ -11,6 +11,8 @@ The [README](../README.md) is the landing page. Deep docs live here.
   automation on, which are expected to move, and the conditions for Beta.
 - [Good first issues](good-first-issues.md) — how the GFI pool is shaped, and how to
   pick one up.
+- [Build log](log/README.md) — what moved each month, what stalled, which decisions are
+  closed, and the numbers including the unflattering ones.
 
 For the `.invigil.yml` field reference the authoritative source is the
 [JSON schema](../schema/invigil.schema.json) plus the [examples](../examples/).
