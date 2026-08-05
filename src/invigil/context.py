@@ -15,6 +15,9 @@ from pathlib import Path
 
 from .config import InvigilConfig
 
+# Vendored / generated trees that would drown out real signal in any walk.
+_SKIP_DIRS = frozenset({".git", "node_modules", ".venv", "venv", "dist", "build", "target", "vendor", "third_party"})
+
 
 @dataclass
 class Context:
@@ -32,6 +35,37 @@ class Context:
         for c in candidates:
             if self.exists(c):
                 return self.path(c)
+        return None
+
+    def first_matching(self, pattern: str, *, dirs: tuple[str, ...] = (".",), depth: int = 1) -> Path | None:
+        """First file whose *name* matches `pattern` (a case-insensitive regex).
+
+        `first_existing` asks whether a project used our spelling. This asks whether
+        the artifact is there at all — `COPYING`, `LICENCE`, `Changelog.rst` and
+        `readme.md` are the same artifacts as ours to every human who reads them,
+        and treating a naming convention as an absence is how a presence check turns
+        into a false accusation.
+        """
+        rx = re.compile(pattern, re.IGNORECASE)
+        for d in dirs:
+            root = self.path(d)
+            if not root.is_dir():
+                continue
+            stack = [(root, 0)]
+            found: list[Path] = []
+            while stack:
+                cur, lvl = stack.pop()
+                try:
+                    entries = sorted(cur.iterdir())
+                except OSError:
+                    continue
+                for p in entries:
+                    if p.is_file() and rx.fullmatch(p.name):
+                        found.append(p)
+                    elif p.is_dir() and lvl + 1 < depth and p.name not in _SKIP_DIRS:
+                        stack.append((p, lvl + 1))
+            if found:
+                return sorted(found, key=lambda p: (len(p.parts), p.name))[0]
         return None
 
     def read(self, *parts: str) -> str:

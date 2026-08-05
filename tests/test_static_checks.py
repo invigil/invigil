@@ -238,3 +238,55 @@ def test_unreadable_keystore_is_still_treated_as_a_secret(tmp_path):
     # of absence, so they keep failing.
     c = _repo_with(tmp_path, "app.keystore", "\x00\x01binary")
     assert t1.no_tracked_secrets(c).status is Status.FAIL
+
+
+# Regression: jqlang/jq ships sig/jq-release-{new,old}.key — the PGP *public* keys
+# you verify jq releases with. PGP armours public keys as "...PUBLIC KEY BLOCK-----",
+# and the BLOCK suffix was honoured for private keys but not public ones, so we
+# accused jq of leaking a secret by pointing at its published signing key.
+def test_pgp_public_key_block_is_not_a_secret(tmp_path):
+    c = _repo_with(tmp_path, "sig/jq-release-new.key", "-----BEGIN PGP PUBLIC KEY BLOCK-----\nmQINBGiL\n")
+    assert t1.no_tracked_secrets(c).status is Status.PASS
+
+
+# Regression: prometheus/prometheus was reported as tracking a secret for
+# web/ui/react-app/.env, whose entire contents are a comment and `PUBLIC_URL=.`.
+# A dotenv is a leak only when it holds a credential — the name proves nothing.
+@pytest.mark.parametrize(
+    "body",
+    [
+        "# comment\nPUBLIC_URL=.\n",
+        "VITE_PARENT_ENV=dont_load_me\n",
+        "NODE_ENV=production\nPORT=8080\n",
+        "API_TOKEN=\n",  # declared but unset
+        "SECRET_KEY=changeme\n",  # self-evident placeholder
+    ],
+)
+def test_dotenv_without_a_credential_is_not_a_secret(tmp_path, body):
+    c = _repo_with(tmp_path, "web/ui/react-app/.env", body)
+    assert t1.no_tracked_secrets(c).status is Status.PASS
+
+
+def test_dotenv_holding_a_real_credential_still_fails(tmp_path):
+    c = _repo_with(tmp_path, "app/.env", "DATABASE_PASSWORD=hunter2isnotgreat\n")
+    r = t1.no_tracked_secrets(c)
+    assert r.status is Status.FAIL and ".env" in r.detail
+
+
+# Regression: spring-boot files throwaway TLS keys under integration-test/, vite
+# under playground/ and __tests__/, celery under examples/. Each was FAIL at
+# blocker severity because the fixture-path list matched bare words only.
+@pytest.mark.parametrize(
+    "rel",
+    [
+        "integration-test/sni-app/src/main/resources/test-hello-server.key",
+        "playground/tls/server.key",
+        "packages/vite/src/node/__tests__/env/secret.key",
+        "examples/security/ssl/worker.key",
+        "tests/syntax-tests/source/DotENV/sample.key",
+        "module/spring-boot-amqp/src/dockerTest/resources/server.key",  # Gradle camelCase
+    ],
+)
+def test_throwaway_key_in_a_decorated_fixture_dir_warns_not_fails(tmp_path, rel):
+    c = _repo_with(tmp_path, rel, "-----BEGIN RSA PRIVATE KEY-----\nMIIE\n")
+    assert t1.no_tracked_secrets(c).status is Status.WARN

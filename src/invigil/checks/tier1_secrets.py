@@ -28,26 +28,89 @@ ALLOW_SUFFIXES = (".pub",)  # public keys are not secrets
 # ENCRYPTED PRIVATE KEY / PGP PRIVATE KEY BLOCK.
 _PRIVATE_PEM = re.compile(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY( BLOCK)?-----")
 # Certificates, CSRs and public keys ship in `.pem` constantly and are not secrets.
-_PUBLIC_PEM = re.compile(r"-----BEGIN (CERTIFICATE|CERTIFICATE REQUEST|PUBLIC KEY|[A-Z0-9 ]*PUBLIC KEY)-----")
+# The `BLOCK` suffix is not optional decoration: PGP armours its *public* keys as
+# `-----BEGIN PGP PUBLIC KEY BLOCK-----`, and omitting it here is what let us tell
+# jqlang/jq it had leaked a secret while pointing at the key that verifies its releases.
+_PUBLIC_PEM = re.compile(r"-----BEGIN (CERTIFICATE|CERTIFICATE REQUEST|[A-Z0-9 ]*PUBLIC KEY)( BLOCK)?-----")
 
 # Key material under these path segments is near-always a deliberate throwaway
 # fixture — TLS/client-cert test suites cannot exist without one. Still worth
 # surfacing, but it is a WARN, not an accusation of a leak.
 _FIXTURE_SEGMENTS = frozenset(
-    {"test", "tests", "testdata", "test_data", "fixtures", "__fixtures__", "e2e", "spec", "specs"}
+    {
+        "test", "tests", "testdata", "testing", "fixture", "fixtures", "e2e", "spec", "specs",
+        # Sample and demo trees carry keys for the same reason test trees do.
+        "example", "examples", "demo", "demos", "sample", "samples", "playground", "playgrounds",
+    }
 )
 
 
+def _fixture_segment(seg: str) -> bool:
+    """Segment-name test tolerant of the ways projects decorate a fixture directory.
+
+    `__tests__` (JS), `integration-test` (Java/Maven), `test_apps`, `syntax-tests`
+    and `dockerTest` (Gradle) all mean "test tree" to any reader; matching the bare
+    words only is why spring-boot and vite were accused of leaking keys they had
+    themselves named `test-*`.
+    """
+    words = re.split(r"[-_.]+|(?<=[a-z0-9])(?=[A-Z])", seg.strip("_"))
+    return any(w.lower() in _FIXTURE_SEGMENTS for w in words if w)
+
+
 def _looks_like_fixture(rel_path: str) -> bool:
-    return any(seg in _FIXTURE_SEGMENTS for seg in rel_path.split("/")[:-1])
+    return any(_fixture_segment(seg) for seg in rel_path.split("/")[:-1])
+
+
+# A `.env` is a leak only if it *holds a credential*. Build config lives in these
+# files constantly: prometheus/prometheus ships `web/ui/react-app/.env` containing
+# exactly `PUBLIC_URL=.`, and we called it a tracked secret.
+_SECRETY_NAME = re.compile(
+    r"(secret|password|passwd|token|api[-_]?key|access[-_]?key|private|credential|auth|dsn|"
+    r"session|signing|salt|cert|passphrase)",
+    re.IGNORECASE,
+)
+# Values that are self-evidently not live credentials.
+_PLACEHOLDER = re.compile(
+    r"^(|true|false|null|none|\.|\d+|localhost.*|https?://localhost.*|"
+    r".*(changeme|dont_load_me|placeholder|your[-_].*|example|dummy|xxx+|todo|<.*>).*)$",
+    re.IGNORECASE,
+)
+
+
+def _env_holds_credential(text: str) -> bool:
+    """True if any assignment in a dotenv file looks like a real secret."""
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        name, _, value = line.partition("=")
+        value = value.strip().strip("'\"")
+        if not _SECRETY_NAME.search(name):
+            continue
+        if _PLACEHOLDER.match(value):
+            continue
+        # A secret-named key with a substantial opaque value is the real thing.
+        if len(value) >= 8:
+            return True
+    return False
 
 
 def _is_public_material(ctx: Context, rel_path: str) -> bool:
-    """True if the file's own contents say it is public (cert / CSR / public key)."""
+    """True if the file's own contents say it holds nothing secret.
+
+    Presence of a candidate *name* is never the verdict — every false positive this
+    check has ever produced came from trusting the filename or the directory it sat
+    in. Read the bytes: a PEM whose armour says CERTIFICATE or PUBLIC KEY is
+    published by definition, and a dotenv with no credential-shaped assignment is
+    build configuration.
+    """
     try:
-        head = ctx.path(rel_path).read_text(errors="replace")[:4096]
+        text = ctx.path(rel_path).read_text(errors="replace")
     except OSError:
         return False  # unreadable/binary keystore — treat as secret, not as safe
+    if rel_path.rsplit("/", 1)[-1] in SECRET_EXACT:
+        return not _env_holds_credential(text)
+    head = text[:4096]
     return bool(_PUBLIC_PEM.search(head)) and not _PRIVATE_PEM.search(head)
 
 

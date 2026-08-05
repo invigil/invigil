@@ -99,8 +99,20 @@ def security_policy(ctx: Context) -> CheckResult:
 @register(id="changelog", gate="G4", title="CHANGELOG.md present", weight=1, mandatory=False, discipline="D4")
 def changelog(ctx: Context) -> CheckResult:
     check = changelog.__invigil__  # type: ignore[attr-defined]
-    if ctx.first_existing("CHANGELOG.md", "CHANGELOG.rst", "docs/CHANGELOG.md"):
-        return CheckResult(check, Status.PASS, "CHANGELOG present")
+    # "Release history" has more spellings than any other artifact: CHANGES.rst
+    # (flask), Changelog.rst (celery), NEWS (scrapy), HISTORY.md (requests),
+    # ChangeLog (jq), CHANGELOG.adoc (asciidoctor), release-notes.md (fastapi).
+    # 15 of the 19 repos we accused of having no changelog were shipping one.
+    found = ctx.first_matching(
+        r"(change ?log|changes|news|history|release[-_ ]?notes)([._-].*)?",
+        dirs=(".", "docs", "doc"),
+        depth=2,
+    )
+    # towncrier and friends keep unreleased fragments in a directory instead.
+    if found is None and ctx.first_matching(r".+", dirs=("changelog.d", "docs/changelog", "newsfragments")):
+        return CheckResult(check, Status.PASS, "changelog fragments present")
+    if found is not None:
+        return CheckResult(check, Status.PASS, f"{found.name} present")
     return CheckResult(
         check,
         Status.FAIL,
