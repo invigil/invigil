@@ -210,6 +210,10 @@ def agent_context_fresh(ctx: Context) -> CheckResult:
     return CheckResult(check, Status.PASS, f"fresh (drift {max(int(drift_days), 0)}d)")
 
 
+_HTML_H1 = re.compile(r"<h1[\s>]", re.IGNORECASE)
+_HTML_H2 = re.compile(r"<h2[\s>]", re.IGNORECASE)
+
+
 @register(
     id="readme-heading-hierarchy",
     gate="G5",
@@ -235,6 +239,12 @@ def readme_heading_hierarchy(ctx: Context) -> CheckResult:
             h1 += 1
         elif ln.startswith("## "):
             h2 += 1
+        else:
+            # A centred HTML banner is the mainstream way to open a README, and
+            # GitHub renders `<h1>` exactly like `#`. Counting ATX only reported
+            # numpy, axios, fastapi, bat and prometheus as having no title at all.
+            h1 += len(_HTML_H1.findall(ln))
+            h2 += len(_HTML_H2.findall(ln))
     if h1 == 1 and h2 >= 2:
         return CheckResult(check, Status.PASS, f"1 H1, {h2} H2 sections")
     return CheckResult(
