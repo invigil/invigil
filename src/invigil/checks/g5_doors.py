@@ -24,8 +24,19 @@ AI_DOOR_FILES = ("llms.txt", "llms-full.txt", *AGENT_CONTEXT_FILES)
 @register(id="docs-index", gate="G5", title="docs/ has an index", weight=1, mandatory=False, discipline="D5")
 def docs_index(ctx: Context) -> CheckResult:
     check = docs_index.__invigil__  # type: ignore[attr-defined]
-    if ctx.first_existing("docs/README.md", "docs/index.md", "mkdocs.yml", "docs/SUMMARY.md"):
+    if ctx.first_existing("mkdocs.yml", "mkdocs.yaml"):
         return CheckResult(check, Status.PASS, "docs index present")
+    # Every docs toolchain names its entry point differently: Sphinx `index.rst` +
+    # `conf.py`, Antora `antora.yml`, Hugo `_index.md`, mkdocs under a locale dir
+    # (`docs/en/mkdocs.yml`), VitePress `.vitepress`. Looking only for Markdown told
+    # requests, flask, scrapy, numpy, celery, sphinx and tox they had no docs index.
+    p = ctx.first_matching(
+        r"(_?index\.(md|rst|adoc|html)|readme\.(md|rst|adoc)|summary\.md|conf\.py|antora\.yml|mkdocs\.ya?ml)",
+        dirs=("docs", "doc", "website", "site", "documentation"),
+        depth=3,
+    )
+    if p is not None:
+        return CheckResult(check, Status.PASS, f"docs index present ({p.name})")
     return CheckResult(
         check,
         Status.FAIL,
@@ -37,8 +48,10 @@ def docs_index(ctx: Context) -> CheckResult:
 @register(id="contributor-door", gate="G5", title="CONTRIBUTING.md present", weight=1, discipline="D5")
 def contributor_door(ctx: Context) -> CheckResult:
     check = contributor_door.__invigil__  # type: ignore[attr-defined]
-    if ctx.first_existing("CONTRIBUTING.md", ".github/CONTRIBUTING.md", "docs/CONTRIBUTING.md"):
-        return CheckResult(check, Status.PASS, "CONTRIBUTING.md present")
+    # CONTRIBUTING.rst (sphinx) and lowercase contributing.md (chalk) are the same door.
+    p = ctx.first_matching(r"contribut(ing|e)([._-].*)?", dirs=(".", ".github", "docs", "doc"))
+    if p is not None:
+        return CheckResult(check, Status.PASS, f"{p.name} present")
     return CheckResult(
         check,
         Status.FAIL,
@@ -52,8 +65,9 @@ def contributor_door(ctx: Context) -> CheckResult:
 )
 def code_of_conduct(ctx: Context) -> CheckResult:
     check = code_of_conduct.__invigil__  # type: ignore[attr-defined]
-    if ctx.first_existing("CODE_OF_CONDUCT.md", ".github/CODE_OF_CONDUCT.md"):
-        return CheckResult(check, Status.PASS, "present")
+    p = ctx.first_matching(r"code[-_ ]?of[-_ ]?conduct([._-].*)?", dirs=(".", ".github", "docs", "doc"))
+    if p is not None:
+        return CheckResult(check, Status.PASS, f"{p.name} present")
     return CheckResult(check, Status.FAIL, "no CODE_OF_CONDUCT.md", "add the Contributor Covenant with a real contact")
 
 

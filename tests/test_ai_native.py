@@ -209,3 +209,25 @@ def test_exit_codes_passes_documented_cli(tmp_path):
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "cli-reference.md").write_text("## Exit codes\n\n0 ok, 1 below gate\n")
     assert ai.exit_codes_documented(ctx(tmp_path)).status is Status.PASS
+
+
+# Regression: numpy, axios, fastapi, bat and prometheus all open their README with
+# a centred HTML banner — `<h1 align="center">` — which GitHub renders exactly like
+# `#`. Counting Markdown ATX only, we reported every one of them as having no title.
+def test_html_headings_count_toward_hierarchy(tmp_path):
+    (tmp_path / "README.md").write_text(
+        '<h1 align="center">numpy</h1>\n\n<h2>Install</h2>\n\n<h2>Usage</h2>\n'
+    )
+    r = ai.readme_heading_hierarchy(ctx(tmp_path))
+    assert r.status is Status.PASS
+
+
+def test_html_and_markdown_headings_are_not_double_counted(tmp_path):
+    # One HTML title plus Markdown sections is the common hybrid; still exactly 1 H1.
+    (tmp_path / "README.md").write_text('<h1 align="center">bat</h1>\n\n## Install\n\n## Usage\n')
+    assert ai.readme_heading_hierarchy(ctx(tmp_path)).status is Status.PASS
+
+
+def test_html_heading_inside_a_fence_is_still_ignored(tmp_path):
+    (tmp_path / "README.md").write_text("# app\n\n## a\n\n```html\n<h1>not a title</h1>\n```\n\n## b\n")
+    assert ai.readme_heading_hierarchy(ctx(tmp_path)).status is Status.PASS

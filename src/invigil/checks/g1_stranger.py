@@ -9,12 +9,29 @@ proven dynamically by the Stranger Gate; these are its static preconditions.
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 from ..context import Context
 from ..model import CheckResult, Status
 from . import register
 
 README_MAX_LINES = 300
+
+# Naming conventions that are the same artifact to any human reading the repo.
+# `COPYING` is the GNU spelling, `LICENCE` the British one, `LICENSE-APACHE` +
+# `LICENSE-MIT` the Rust dual-license pair; ripgrep, curl, jq, bat, chalk, sphinx
+# and tqdm were each told they had no license while shipping one of these.
+_LICENSE_NAME = r"(licen[cs]e|copying|unlicen[cs]e|copyright)([._-].*)?"
+# README.adoc (asciidoctor) and lowercase readme.md (chalk) are still READMEs.
+_README_NAME = r"readme([._].*)?"
+
+
+def _license_file(ctx: Context) -> Path | None:
+    return ctx.first_matching(_LICENSE_NAME)
+
+
+def _readme_file(ctx: Context) -> Path | None:
+    return ctx.first_matching(_README_NAME)
 
 
 @register(
@@ -30,7 +47,7 @@ def license_present(ctx: Context) -> CheckResult:
     Which license is advisory — see license-apache2 (non-mandatory).
     """
     check = license_present.__invigil__  # type: ignore[attr-defined]
-    p = ctx.first_existing("LICENSE", "LICENSE.txt", "LICENSE.md")
+    p = _license_file(ctx)
     if p is not None:
         return CheckResult(check, Status.PASS, f"{p.name} present")
     return CheckResult(
@@ -57,7 +74,7 @@ def license_apache2(ctx: Context) -> CheckResult:
         weights: { license-apache2: 3 }
     """
     check = license_apache2.__invigil__  # type: ignore[attr-defined]
-    p = ctx.first_existing("LICENSE", "LICENSE.txt", "LICENSE.md")
+    p = _license_file(ctx)
     if p is None:
         return CheckResult(check, Status.SKIP, "no LICENSE file (checked by license-present)")
     text = p.read_text(errors="replace")
@@ -74,7 +91,7 @@ def license_apache2(ctx: Context) -> CheckResult:
 @register(id="readme-present", gate="G1", title="README exists", weight=1, discipline="D1")
 def readme_present(ctx: Context) -> CheckResult:
     check = readme_present.__invigil__  # type: ignore[attr-defined]
-    p = ctx.first_existing("README.md", "README.rst", "README")
+    p = _readme_file(ctx)
     if p:
         return CheckResult(check, Status.PASS, p.name)
     return CheckResult(check, Status.FAIL, "no README", "add a README.md landing page")
@@ -89,7 +106,7 @@ def readme_present(ctx: Context) -> CheckResult:
 )
 def readme_length(ctx: Context) -> CheckResult:
     check = readme_length.__invigil__  # type: ignore[attr-defined]
-    p = ctx.first_existing("README.md", "README.rst", "README")
+    p = _readme_file(ctx)
     if p is None:
         return CheckResult(check, Status.FAIL, "no README", "add a README.md")
     n = len(p.read_text(errors="replace").splitlines())
@@ -141,7 +158,7 @@ def _has_quickstart_heading(text: str) -> bool:
 @register(id="readme-quickstart", gate="G1", title="README has a Quick Start section", weight=1, discipline="D1")
 def readme_quickstart(ctx: Context) -> CheckResult:
     check = readme_quickstart.__invigil__  # type: ignore[attr-defined]
-    p = ctx.first_existing("README.md", "README.rst", "README")
+    p = _readme_file(ctx)
     if p is None:
         return CheckResult(check, Status.SKIP, "no README (presence is readme-present's call)")
     if _has_quickstart_heading(p.read_text(errors="replace")):
