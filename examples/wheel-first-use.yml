@@ -1,5 +1,5 @@
 # Copy to .github/workflows/wheel-first-use.yml in the package being tested.
-# Replace the Invigil commit and the example command/output before enabling.
+# Review the pinned preview commit and replace the example command/output before enabling.
 # This feature is not yet in the published Invigil package.
 name: Wheel first use
 on:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      INVIGIL_REF: REPLACE_WITH_REVIEWED_FEATURE_COMMIT
+      INVIGIL_REF: 0e3277f69826357afc4947a656cdd37f9fb670e1
       FIRST_USE_COMMAND: '["python", "-c", "import example; print(example.hello())"]'
       FIRST_USE_EXPECT: hello
     steps:
