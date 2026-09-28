@@ -1,0 +1,69 @@
+# Copy to .github/workflows/wheel-first-use.yml in the package being tested.
+# Replace the Invigil commit and the example command/output before enabling.
+# This feature is not yet in the published Invigil package.
+name: Wheel first use
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  first-use:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      INVIGIL_REF: REPLACE_WITH_REVIEWED_FEATURE_COMMIT
+      FIRST_USE_COMMAND: '["python", "-c", "import example; print(example.hello())"]'
+      FIRST_USE_EXPECT: hello
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Install build and verification tools
+        run: |
+          if [[ ! "$INVIGIL_REF" =~ ^[0-9a-f]{40}$ ]]; then
+            echo 'Set INVIGIL_REF to a reviewed commit containing wheel verification.' >&2
+            exit 2
+          fi
+          python -m pip install build "invigil @ git+https://github.com/invigil/invigil.git@$INVIGIL_REF"
+      - name: Build the candidate wheel
+        run: python -m build --wheel --outdir candidate-dist
+      - name: Select the exact artifact and first-use operation
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import yaml
+
+          wheels = list(Path('candidate-dist').glob('*.whl'))
+          if len(wheels) != 1:
+              raise SystemExit(f'Expected one wheel, found {len(wheels)}')
+          config = {
+              'artifacts': [{
+                  'type': 'wheel',
+                  'path': str(wheels[0].resolve()),
+                  'command': json.loads(os.environ['FIRST_USE_COMMAND']),
+                  'expect_contains': os.environ['FIRST_USE_EXPECT'],
+              }],
+              'boot_budget_minutes': 3,
+          }
+          directory = Path('.invigil-wheel')
+          directory.mkdir(exist_ok=True)
+          (directory / '.invigil.yml').write_text(yaml.safe_dump(config))
+          PY
+      - name: Verify installation and first use
+        run: invigil stranger .invigil-wheel --format json --output first-use.json
+      - name: Save evidence even when verification fails
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: first-use-evidence
+          path: |
+            first-use.json
+            candidate-dist/*.whl
+          if-no-files-found: warn
+          retention-days: 7
