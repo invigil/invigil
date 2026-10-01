@@ -6,6 +6,13 @@ All notable changes to Invigil are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+- Local wheel first-use verification through `invigil stranger`: fresh temporary
+  environments outside the checkout, explicit command/output expectations, artifact
+  hashing, offline wheelhouse support, and bounded execution with cleanup.
+- Stranger text/JSON report files with phase results, dependency inventory,
+  timings and NOT_RUN outcomes; copyable wheel-verification CI example.
+
 ### Fixed
 - **`scorecard-score` now tells you the actual fix.** The check fetched the full
   Scorecard API response, read `.score`, and discarded every finding — then said
