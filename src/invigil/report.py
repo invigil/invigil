@@ -182,3 +182,21 @@ RENDERERS = {
     "ai-badge": as_ai_badge,
     "llm": as_llm,
 }
+
+
+def stranger_text(report: dict) -> str:
+    """A saved execution summary; unlike a scorecard it makes no quality grade."""
+    lines = [f"Invigil first-use: {report['status']}"]
+    if report["detail"]:
+        lines.append(report["detail"])
+    for wheel in report["wheels"]:
+        lines.append(f"{wheel['status']} {wheel['artifact']} [{wheel['phase']}]: {wheel['detail']}")
+        if wheel["sha256"]:
+            lines.append(f"  sha256: {wheel['sha256']}")
+        if wheel["fix"]:
+            lines.append(f"  fix: {wheel['fix']}")
+    return "\n".join(lines)
+
+
+# Execution reports have a separate schema from scorecards.
+STRANGER_RENDERERS = {"text": stranger_text, "json": lambda report: json.dumps(report, indent=2)}

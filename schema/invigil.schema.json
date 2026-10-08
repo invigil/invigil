@@ -61,8 +61,11 @@
         "type": "object",
         "additionalProperties": false,
         "required": ["type"],
+        "allOf": [{ "if": { "properties": { "type": { "const": "wheel" } } }, "then": { "required": ["path", "command"], "properties": { "command": { "minItems": 1 } } } }],
         "properties": {
-          "type": { "type": "string", "enum": ["pypi", "ghcr"] },
+          "type": { "type": "string", "enum": ["pypi", "ghcr", "wheel"] },
+          "path": { "type": "string", "description": "wheel only: exact .whl path relative to the configuration directory." },
+          "wheelhouse": { "type": "string", "description": "wheel only: directory of offline dependencies; disables package indexes." },
           "name": { "type": "string", "description": "PyPI package spec, e.g. invicton[all-providers]." },
           "image": { "type": "string", "description": "Container image ref, e.g. ghcr.io/kaaval/kaaval:edge." },
           "boot": { "type": "string", "description": "Optional custom boot command/script." },
@@ -71,9 +74,9 @@
           "command": {
             "type": "array",
             "items": { "type": "string" },
-            "description": "ghcr only: marks a CLI image. Run to completion with these entrypoint args (docker run --rm) instead of booting a daemon; the run must exit 0."
+            "description": "wheel: required first-use argv, resolved in the new environment. ghcr: marks a CLI image. Run to completion with these entrypoint args (docker run --rm) instead of booting a daemon; the run must exit 0."
           },
-          "expect_contains": { "type": "string", "description": "ghcr+command only: substring the CLI output must contain." }
+          "expect_contains": { "type": "string", "description": "wheel or ghcr+command: substring the CLI output must contain." }
         }
       }
     },

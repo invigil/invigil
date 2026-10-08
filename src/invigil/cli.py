@@ -26,7 +26,7 @@ from .checks import GROUPS, LAYERS
 from .config import InvigilConfig
 from .context import Context
 from .model import GATES, Scorecard, Status
-from .report import RENDERERS
+from .report import RENDERERS, STRANGER_RENDERERS
 
 
 def score(
@@ -148,6 +148,8 @@ def main(argv: list[str] | None = None) -> int:
 
     st_cmd = sub.add_parser("stranger", help="the Cold-Start Gate: boot published artifacts and probe them (Layer 2)")
     st_cmd.add_argument("path", nargs="?", default=".", help="repo path holding .invigil.yml (default: .)")
+    st_cmd.add_argument("--format", choices=list(STRANGER_RENDERERS), default="text")
+    st_cmd.add_argument("--output", type=Path, help="write the execution report to this file")
 
     pf_cmd = sub.add_parser("portfolio", help="score several repos into one grade table (C5)")
     pf_cmd.add_argument("paths", nargs="+", help="repo paths to score")
@@ -235,16 +237,44 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.cmd == "stranger":
+        from contextlib import redirect_stdout
+        from dataclasses import asdict
+
+        import yaml
+
         from .stranger import StrangerError, run
 
         repo = Path(args.path).resolve()
-        config = InvigilConfig.load(repo)
+        wheels = {}
+        status, detail, code = "PASS", "", 0
         try:
-            run(config)
-        except StrangerError as exc:
-            print(f"invigil stranger: {exc}", file=sys.stderr)
-            return 1
-        return 0
+            config = InvigilConfig.load(repo)
+            # Machine-readable stdout contains only the report; execution logs go
+            # to stderr. Preserve historical console output for plain text runs.
+            with redirect_stdout(sys.stderr if args.format == "json" or args.output else sys.stdout):
+                run(config, repo=repo, wheel_results=wheels)
+        except (StrangerError, OSError, ValueError, yaml.YAMLError) as exc:
+            status = "FAIL" if any(w.status == "FAIL" for w in wheels.values()) else "ERROR"
+            detail, code = str(exc), 1
+        report = {
+            "schema_version": 1,
+            "invigil_version": __version__,
+            "status": status,
+            "detail": detail,
+            "wheels": [{"artifact_index": i, **asdict(w)} for i, w in wheels.items()],
+        }
+        rendered = STRANGER_RENDERERS[args.format](report)
+        if args.output:
+            try:
+                args.output.write_text(rendered + "\n")
+            except OSError as exc:
+                print(f"invigil stranger: cannot write report: {exc}", file=sys.stderr)
+                return 2
+        elif args.format == "json":
+            print(rendered)
+        elif code:
+            print(f"invigil stranger: {detail}", file=sys.stderr)
+        return code
 
     if args.cmd == "portfolio":
         from datetime import date
