@@ -91,3 +91,30 @@ def test_all_failures_have_fixes(tmp_path, fn):
     r = fn(ctx(tmp_path))
     if r.status is Status.FAIL:
         assert r.fix, f"{r.check.id} failed without a fix"
+
+
+# Regression: 7 of 7 repos we told "no LICENSE file" were shipping one — ripgrep
+# and bat under Rust's LICENSE-APACHE/LICENSE-MIT pair, curl and jq under the GNU
+# COPYING spelling, tqdm under the British LICENCE, chalk lowercase, sphinx as
+# LICENSE.rst. A naming convention is not an absence.
+@pytest.mark.parametrize(
+    "name",
+    ["COPYING", "LICENCE", "license", "LICENSE.rst", "LICENSE-APACHE", "LICENSE-MIT", "UNLICENSE", "licence.txt"],
+)
+def test_license_recognised_under_any_convention(tmp_path, name):
+    (tmp_path / name).write_text("MIT License\n")
+    r = g1.license_present(ctx(tmp_path))
+    assert r.status is Status.PASS and name in r.detail
+
+
+def test_license_absent_still_fails(tmp_path):
+    (tmp_path / "README.md").write_text("# app\n")
+    assert g1.license_present(ctx(tmp_path)).status is Status.FAIL
+
+
+# Regression: asciidoctor/asciidoctor and asciidoctor-pdf ship README.adoc,
+# sindresorhus/chalk ships lowercase readme.md. All three were "no README".
+@pytest.mark.parametrize("name", ["README.adoc", "readme.md", "README.txt", "Readme.markdown"])
+def test_readme_recognised_under_any_convention(tmp_path, name):
+    (tmp_path / name).write_text("# thing\n")
+    assert g1.readme_present(ctx(tmp_path)).status is Status.PASS
