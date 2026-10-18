@@ -38,9 +38,24 @@ _PUBLIC_PEM = re.compile(r"-----BEGIN (CERTIFICATE|CERTIFICATE REQUEST|[A-Z0-9 ]
 # surfacing, but it is a WARN, not an accusation of a leak.
 _FIXTURE_SEGMENTS = frozenset(
     {
-        "test", "tests", "testdata", "testing", "fixture", "fixtures", "e2e", "spec", "specs",
+        "test",
+        "tests",
+        "testdata",
+        "testing",
+        "fixture",
+        "fixtures",
+        "e2e",
+        "spec",
+        "specs",
         # Sample and demo trees carry keys for the same reason test trees do.
-        "example", "examples", "demo", "demos", "sample", "samples", "playground", "playgrounds",
+        "example",
+        "examples",
+        "demo",
+        "demos",
+        "sample",
+        "samples",
+        "playground",
+        "playgrounds",
     }
 )
 
@@ -71,8 +86,8 @@ _SECRETY_NAME = re.compile(
 )
 # Values that are self-evidently not live credentials.
 _PLACEHOLDER = re.compile(
-    r"^(|true|false|null|none|\.|\d+|localhost.*|https?://localhost.*|"
-    r".*(changeme|dont_load_me|placeholder|your[-_].*|example|dummy|xxx+|todo|<.*>).*)$",
+    r"^(|true|false|null|none|\.|localhost|https?://localhost(?::\d+)?/?|"
+    r"changeme|dont_load_me|placeholder|your[-_][a-z0-9_-]+|example|dummy|xxx+|todo|<[^>\n]+>)$",
     re.IGNORECASE,
 )
 
@@ -89,9 +104,9 @@ def _env_holds_credential(text: str) -> bool:
             continue
         if _PLACEHOLDER.match(value):
             continue
-        # A secret-named key with a substantial opaque value is the real thing.
-        if len(value) >= 8:
-            return True
+        # Length, numeric form or a substring such as "example" cannot establish
+        # that a credential is a placeholder. Short and numeric passwords exist.
+        return True
     return False
 
 

@@ -215,9 +215,7 @@ def test_exit_codes_passes_documented_cli(tmp_path):
 # a centred HTML banner — `<h1 align="center">` — which GitHub renders exactly like
 # `#`. Counting Markdown ATX only, we reported every one of them as having no title.
 def test_html_headings_count_toward_hierarchy(tmp_path):
-    (tmp_path / "README.md").write_text(
-        '<h1 align="center">numpy</h1>\n\n<h2>Install</h2>\n\n<h2>Usage</h2>\n'
-    )
+    (tmp_path / "README.md").write_text('<h1 align="center">numpy</h1>\n\n<h2>Install</h2>\n\n<h2>Usage</h2>\n')
     r = ai.readme_heading_hierarchy(ctx(tmp_path))
     assert r.status is Status.PASS
 

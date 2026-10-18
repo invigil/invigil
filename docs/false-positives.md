@@ -14,6 +14,13 @@ embarrassing.
 30, and 331 of 402 findings are still unaudited. Published early on purpose —
 holding it until the numbers flatter us would defeat the point.
 
+The measurements below are the **5 August 2026 audit snapshot**, not a new
+measurement of every subsequent version. During the 18 October review, synthetic
+regressions exposed over-broad dotenv placeholder filtering: numeric passwords,
+short passwords and credentials containing the substring `example` were skipped.
+Those cases now fail the tracked-secret check. The 27-repository experiment has
+not been rerun for that correction; its historical counts are preserved below.
+
 ## Method
 
 1. **Score.** 27 third-party repositories, shallow-cloned, scored with

@@ -32,8 +32,16 @@ def write(tmp_path: Path, rel: str, body: str = "x\n") -> None:
 @pytest.mark.parametrize(
     "rel",
     [
-        "CHANGES.rst", "CHANGES.md", "Changelog.rst", "ChangeLog", "NEWS", "NEWS.md",
-        "HISTORY.md", "CHANGELOG.adoc", "docs/changes.rst", "docs/release-notes.md",
+        "CHANGES.rst",
+        "CHANGES.md",
+        "Changelog.rst",
+        "ChangeLog",
+        "NEWS",
+        "NEWS.md",
+        "HISTORY.md",
+        "CHANGELOG.adoc",
+        "docs/changes.rst",
+        "docs/release-notes.md",
     ],
 )
 def test_changelog_recognised_under_any_convention(tmp_path, rel):

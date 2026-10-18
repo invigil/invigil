@@ -273,6 +273,13 @@ def test_dotenv_holding_a_real_credential_still_fails(tmp_path):
     assert r.status is Status.FAIL and ".env" in r.detail
 
 
+@pytest.mark.parametrize("value", ["123456789012", "shortpw", "live-example-key-c81fc98335"])
+def test_dotenv_numeric_short_and_placeholder_substring_credentials_still_fail(tmp_path, value):
+    c = _repo_with(tmp_path, "app/.env", f"DATABASE_PASSWORD={value}\n")
+    result = t1.no_tracked_secrets(c)
+    assert result.status is Status.FAIL and result.fix
+
+
 # Regression: spring-boot files throwaway TLS keys under integration-test/, vite
 # under playground/ and __tests__/, celery under examples/. Each was FAIL at
 # blocker severity because the fixture-path list matched bare words only.
