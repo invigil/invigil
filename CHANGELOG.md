@@ -12,6 +12,9 @@ All notable changes to Invigil are documented here. Format follows
   hashing, offline wheelhouse support, and bounded execution with cleanup.
 - Stranger text/JSON report files with phase results, dependency inventory,
   timings and NOT_RUN outcomes; copyable wheel-verification CI example.
+- GitHub-hosted wheel first-use checks on Python 3.11/3.12, with exact candidate
+  hashes, offline broken/fixed demo evidence, and a concurrent-install regression
+  check for independent environments and cleanup.
 
 ### Fixed
 - **`scorecard-score` now tells you the actual fix.** The check fetched the full

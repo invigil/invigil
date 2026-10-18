@@ -37,3 +37,11 @@ This is a controlled packaging example, not a reproduced upstream bug or proof
 that ordinary smoke tests cannot catch the same defect. The proposed benefit is
 repeatable installation checks and consistent diagnostics. A venv is not a
 security boundary for arbitrary third-party code.
+
+The repository's **Wheel first-use preview** workflow exercises this demo and the
+copyable `examples/wheel-first-use.yml` recipe on Python 3.11 and 3.12. It builds
+Invigil's candidate wheel, runs its installed CLI outside the checkout, and checks
+the reported SHA-256 against that exact wheel. Each job saves the candidate,
+first-use report, and broken/fixed demo evidence for seven days. These checks do
+not publish a package. The workflow is in
+`.github/workflows/wheel-first-use-preview.yml`.

@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      INVIGIL_REF: 0e3277f69826357afc4947a656cdd37f9fb670e1
+      INVIGIL_REF: 331d8093d61b05156ec40f377c462bf584ef6a80
       FIRST_USE_COMMAND: '["python", "-c", "import example; print(example.hello())"]'
       FIRST_USE_EXPECT: hello
     steps:

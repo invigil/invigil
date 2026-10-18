@@ -2,8 +2,10 @@
 
 import csv
 import io
+import json
 import sys
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -122,6 +124,34 @@ def test_clean_environment_and_cleanup(tmp_path, monkeypatch):
     )
     assert result.status == "PASS", result
     assert not Path(result.output.strip()).exists()
+
+
+def test_parallel_checks_use_independent_work_and_environments(tmp_path):
+    wheel = make_wheel(tmp_path, {"firstuse_demo/__init__.py": ""})
+    artifact = {
+        "path": wheel.name,
+        "wheelhouse": ".",
+        "command": [
+            "python",
+            "-c",
+            (
+                "import json,sys,time; from pathlib import Path; import firstuse_demo; "
+                "marker=Path('first-use-marker'); "
+                "assert not marker.exists(); marker.write_text(sys.prefix); time.sleep(0.2); "
+                "assert marker.read_text() == sys.prefix; "
+                "print(json.dumps({'cwd': str(Path.cwd()), 'prefix': sys.prefix}))"
+            ),
+        ],
+    }
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(verify_wheel, artifact, tmp_path, 60) for _ in range(2)]
+        results = [future.result(timeout=90) for future in futures]
+    assert all(result.status == "PASS" for result in results), results
+    assert results[0].sha256 == results[1].sha256
+    paths = [json.loads(result.output) for result in results]
+    assert paths[0]["cwd"] != paths[1]["cwd"]
+    assert paths[0]["prefix"] != paths[1]["prefix"]
+    assert all(not Path(path).exists() for run in paths for path in run.values())
 
 
 def test_first_use_timeout(tmp_path):

@@ -1,0 +1,97 @@
+# Exercise examples/wheel-first-use.yml against Invigil's own candidate wheel.
+# The verifier is pinned to the reviewed source preview; the candidate is built
+# from this PR checkout. No release credentials or publication permissions.
+name: Wheel first-use preview
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  first-use:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12']
+    defaults:
+      run:
+        shell: bash
+    env:
+      INVIGIL_REF: 331d8093d61b05156ec40f377c462bf584ef6a80
+      FIRST_USE_COMMAND: '["invigil", "evaluate", ".", "--offline", "--format", "json"]'
+      FIRST_USE_EXPECT: '"checks":'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install build and verification tools
+        run: |
+          if [[ ! "$INVIGIL_REF" =~ ^[0-9a-f]{40}$ ]]; then
+            echo 'Set INVIGIL_REF to a reviewed commit containing wheel verification.' >&2
+            exit 2
+          fi
+          python -m pip install build "invigil @ git+https://github.com/invigil/invigil.git@$INVIGIL_REF"
+      - name: Build the candidate wheel
+        run: python -m build --wheel --outdir candidate-dist
+      - name: Select the exact artifact and first-use operation
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import yaml
+
+          wheels = list(Path('candidate-dist').glob('*.whl'))
+          if len(wheels) != 1:
+              raise SystemExit(f'Expected one wheel, found {len(wheels)}')
+          config = {
+              'artifacts': [{
+                  'type': 'wheel',
+                  'path': str(wheels[0].resolve()),
+                  'command': json.loads(os.environ['FIRST_USE_COMMAND']),
+                  'expect_contains': os.environ['FIRST_USE_EXPECT'],
+              }],
+              'boot_budget_minutes': 3,
+          }
+          directory = Path('.invigil-wheel')
+          directory.mkdir(exist_ok=True)
+          (directory / '.invigil.yml').write_text(yaml.safe_dump(config))
+          PY
+      - name: Verify installation and first use
+        run: invigil stranger .invigil-wheel --format json --output first-use.json
+      - name: Confirm evidence identifies the exact candidate
+        run: |
+          python - <<'PYCODE'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path('first-use.json').read_text())
+          wheel = next(Path('candidate-dist').glob('*.whl'))
+          assert report['status'] == 'PASS', report
+          result, = report['wheels']
+          assert result['sha256'] == hashlib.sha256(wheel.read_bytes()).hexdigest()
+          assert all(step['status'] == 'PASS' for step in result['steps'])
+          assert any(dep['name'].lower() == 'invigil' for dep in result['dependencies'])
+          PYCODE
+      - name: Exercise the offline broken and repaired wheels
+        env:
+          TMPDIR: ${{ runner.temp }}
+        run: python examples/first-use-demo/run.py | tee first-use-demo.log
+      - name: Save evidence even when verification fails
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: first-use-evidence-${{ matrix.python }}
+          path: |
+            first-use.json
+            first-use-demo.log
+            ${{ runner.temp }}/invigil-first-use-demo-*/
+            candidate-dist/*.whl
+          if-no-files-found: warn
+          retention-days: 7
