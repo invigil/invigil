@@ -17,6 +17,8 @@ All notable changes to Invigil are documented here. Format follows
   check for independent environments and cleanup.
 
 ### Fixed
+- Exclude local planning and assistant files explicitly from distribution builds;
+  Git's local exclude file alone does not protect a source archive.
 - Recognize conventional license, README, documentation and contributor-file
   names; distinguish public key/build configuration files from credential-bearing
   candidates. Numeric/short credentials and values containing placeholder words

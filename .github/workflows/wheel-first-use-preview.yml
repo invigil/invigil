@@ -36,8 +36,24 @@ jobs:
             exit 2
           fi
           python -m pip install build "invigil @ git+https://github.com/invigil/invigil.git@$INVIGIL_REF"
-      - name: Build the candidate wheel
-        run: python -m build --wheel --outdir candidate-dist
+      - name: Build candidate distributions with a private-file regression fixture
+        run: |
+          printf 'Synthetic local planning file. Must not be packaged.\n' > PLAN.md
+          python -m build --outdir candidate-dist
+      - name: Inspect distribution contents
+        run: |
+          python - <<'PY'
+          import tarfile
+          import zipfile
+          from pathlib import Path
+
+          directory = Path('candidate-dist')
+          with tarfile.open(next(directory.glob('*.tar.gz'))) as archive:
+              assert not any(name.endswith('/PLAN.md') for name in archive.getnames())
+          with zipfile.ZipFile(next(directory.glob('*.whl'))) as archive:
+              assert not any(name.endswith('PLAN.md') for name in archive.namelist())
+              assert 'invigil/wheel_check.py' in archive.namelist()
+          PY
       - name: Select the exact artifact and first-use operation
         run: |
           python - <<'PY'
@@ -93,5 +109,6 @@ jobs:
             first-use-demo.log
             ${{ runner.temp }}/invigil-first-use-demo-*/
             candidate-dist/*.whl
+            candidate-dist/*.tar.gz
           if-no-files-found: warn
           retention-days: 7
