@@ -1,6 +1,6 @@
 [project]
 name = "invigil"
-version = "1.7.1"
+version = "1.8.0"
 description = "Linters check your code. Invigil checks whether your repo is legible — to newcomers and to AI agents."
 readme = "README.md"
 requires-python = ">=3.11"

@@ -17,6 +17,11 @@ All notable changes to Invigil are documented here. Format follows
   check for independent environments and cleanup.
 
 ### Fixed
+- Recognize conventional license, README, documentation and contributor-file
+  names; distinguish public key/build configuration files from credential-bearing
+  candidates. Numeric/short credentials and values containing placeholder words
+  remain findings. The accompanying false-positive measurements are a historical
+  audit snapshot, not a claim about the current error rate.
 - Require patched MCP 1.x support and refresh the lockfile's MCP, PyJWT and
   cryptography versions. CI audits the locked core and optional MCP dependency
   sets and saves its advisory reports.
