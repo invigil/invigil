@@ -39,7 +39,7 @@ dev = [
 ]
 # The MCP server is opt-in so the core CLI stays zero-dep beyond PyYAML.
 mcp = [
-    "mcp>=1.0",
+    "mcp>=1.30,<2",
 ]
 
 [dependency-groups]

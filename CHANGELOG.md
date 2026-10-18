@@ -17,6 +17,9 @@ All notable changes to Invigil are documented here. Format follows
   check for independent environments and cleanup.
 
 ### Fixed
+- Require patched MCP 1.x support and refresh the lockfile's MCP, PyJWT and
+  cryptography versions. CI audits the locked core and optional MCP dependency
+  sets and saves its advisory reports.
 - **`scorecard-score` now tells you the actual fix.** The check fetched the full
   Scorecard API response, read `.score`, and discarded every finding — then said
   *"triage the Scorecard findings"*. `CheckResult.fix` is documented as "exact
