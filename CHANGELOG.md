@@ -4,6 +4,20 @@ All notable changes to Invigil are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **`scorecard-score` now tells you the actual fix.** The check fetched the full
+  Scorecard API response, read `.score`, and discarded every finding — then said
+  *"triage the Scorecard findings"*. `CheckResult.fix` is documented as "exact
+  command/edit to resolve"; that string was neither, and it is the same
+  can't-tell-you-how-to-pass-it anti-pattern Invigil exists to catch. It now names
+  the worst checks, the files (`.github/workflows/ci.yml:1`), and the remediation
+  pattern Scorecard never gives you — *set top-level `permissions: contents: read`,
+  elevate per-job*. Scorecard's `-1` (its own internal error) and `Info:` detail
+  lines are excluded, so nobody is sent to fix a working file. PASS/FAIL logic is
+  unchanged.
+
 ## [1.7.1] - 2026-07-27
 
 ### Added
