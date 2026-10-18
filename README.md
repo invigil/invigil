@@ -1,6 +1,6 @@
 # Invigil
 
-**Linters check your code. Invigil checks whether your project is legible.**
+**Verify the path from installation to first successful use—for people and agents.**
 
 [![CI](https://github.com/invigil/invigil/actions/workflows/ci.yml/badge.svg)](https://github.com/invigil/invigil/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
@@ -11,19 +11,39 @@
 [![Invigil grade](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/invigil/invigil/main/badges/invigil.json)](https://github.com/invigil/invigil)
 [![AI-ready](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/invigil/invigil/main/badges/invigil-ai.json)](https://github.com/invigil/invigil#when-your-user-is-an-agent)
 
-Ruff has your syntax. Dependabot has your dependencies. Scorecard has your supply chain.
-**Nothing checks whether someone arriving cold can act on the project:** boot it in ten
-minutes, get an error that tells them the fix, install the thing from PyPI *today*, read a
-README that's still a landing page and not a 600-line wall.
+A package can install successfully and still fail its first useful command. Invigil
+combines repository-quality checks with a Cold-Start Gate that exercises declared
+operations and reports the evidence needed to diagnose failures.
 
-That's the test every project takes when someone new finds it — a new engineer, or
-increasingly an AI agent with a context window instead of patience. If they can't reach
-"hello world" in 10 minutes, they leave. If the published artifact is broken because CI
-only tests the source tree, they leave. If the error is a silent stack trace, they leave.
-Nobody files an issue on the way out.
+**New in development:** verify an exact Python wheel before publication, outside the
+source checkout. The existing scorecard, published-artifact checks, and agent tools
+remain available. Wheel verification is **unreleased**; `pip install invigil` and the
+release pins below do not include it yet.
 
-Invigil turns those promises into mechanical checks, runs them in CI, and prints the exact
-fix for every failure — so the project speaks for itself.
+## Try the first-use demo (source preview)
+
+On Linux with Python 3.11+ and venv support, use the source-preview branch:
+
+```bash
+git clone --branch feat/wheel-first-use-preview https://github.com/invigil/invigil.git
+cd invigil
+python3 -m venv .venv
+.venv/bin/python -m pip install -e .
+.venv/bin/python examples/first-use-demo/run.py
+```
+
+The demo runs offline and checks real wheels. Both install; one omits a required data file and fails its first-use command. Adding that file makes the same
+check pass. It prints the failure and saves JSON reports in a temporary directory.
+This is a synthetic example, not a claim about an upstream project's current release.
+
+[Demo details](examples/first-use-demo/README.md) ·
+[Verify your own wheel](docs/cli-reference.md#invigil-stranger-path) ·
+[CI workflow template](examples/wheel-first-use.yml)
+
+The preview requires an explicit command and optional expected output. A successful
+run proves that operation worked in the recorded environment; it is not a general
+release-safety guarantee. Run unfamiliar artifacts in disposable workers without
+credentials—a Python venv is not a security sandbox.
 
 > *invigilate* — to watch over an exam and enforce its rules.
 
@@ -33,39 +53,32 @@ fix for every failure — so the project speaks for itself.
 
 Invigil does not replace your existing tools; it covers the product-quality gaps they leave behind.
 
-| Tool | Focus | What it misses (that Invigil catches) |
-|---|---|---|
-| **Linters / SonarQube** | Code style, static bugs, complexity | Does the *published artifact* actually boot? Is the README approachable? |
-| **Dependabot / Renovate** | Keeping dependencies updated | Are you enforcing the lockfile in CI? Is there a version matrix? |
-| **OpenSSF Scorecard** | Supply-chain security (branch rules, tokens) | Does the project have a Quick Start? Are failure modes actionable? |
-| **Invigil** | Product quality, legibility, error hygiene | (Invigil relies on the above tools and enforces their presence) |
+| Capability | Role |
+|---|---|
+| Repository scorecard | Checks documentation, configuration and quality conventions; suggests fixes |
+| Published-artifact Cold-Start Gate | Exercises configured package/container operations and HTTP probes |
+| Local-wheel first use (unreleased) | Verifies the candidate artifact; records its hash, phases and dependencies |
+| Existing linters, scanners and tests | Continue checking code correctness and security alongside Invigil |
+
+A clean-install smoke script can detect the same packaging defects. Invigil aims
+to make that workflow easier to configure and its reports consistent across projects.
 
 ---
 
 ## Why
 
-You already wrote the doctrine; you just enforce it by hand. Every failing Invigil check tells
-you **what's wrong, why it matters, and the exact command to fix it** — because a gate that
-can't tell you how to pass it is the same broken-error-message anti-pattern it's meant to catch.
+The scorecard checks whether the project is legible to newcomers and agents.
+Every failing static check includes a suggested command or edit. Execution reports
+retain the failed step and output; they cannot infer every application's root cause.
 
-It grades against seven **Gates**, each a legibility promise to a different cold-start reader:
-
-| Gate | The promise |
-|---|---|
-| **G1** | Anyone arriving cold succeeds in 10 minutes on a clean machine |
-| **G2** | Every failure mode tells the user the fix |
-| **G3** | Published artifacts are machine-verified daily |
-| **G4** | Supply-chain evidence is public (Scorecard ≥7, signed releases, SBOM) |
-| **G5** | All five doors open and documented (newbie, operator, contributor, enterprise, AI) |
-| **G6** | First external contributor merged without hand-holding |
-| **G7** | Cited/integrated by projects you don't control |
-
-A repo *reaches* `Gn` only when every mandatory check for gates ≤ n passes, and gets a letter
-grade from its weighted score.
+The [seven Gates](docs/doctrine.md) cover onboarding, errors, artifact verification,
+supply-chain evidence, audience documentation, contribution and adoption. A grade
+summarizes implemented repository checks; it does not establish that an artifact
+was executed successfully. Use the Cold-Start Gate for execution evidence.
 
 ## Install
 
-One tool, four doors — pick the one that matches where you run it:
+Published channels — pick the one that matches where you run it:
 
 | Channel | Where it fits | One-liner |
 |---|---|---|
@@ -79,6 +92,9 @@ Every release ships all of it signed: cosign-signed wheel, sdist, and container 
 SPDX SBOM — verifiable with `cosign verify` against the GitHub OIDC identity.
 
 ## Quick Start
+
+These commands use the published scorecard. For wheel verification, use the source
+preview above.
 
 Run it locally on any repo:
 
@@ -134,8 +150,9 @@ Two layers, matching the doctrine:
   smoke test, ≥5 good-first-issues, docs index, `llms.txt`/`AGENTS.md`, and more. Emits text /
   JSON / Markdown / a shields.io badge.
 - **Cold-Start Gate** (nightly, reusable — `invigil stranger`) — on a clean runner, installs
-  and boots each *published* artifact you declare and probes its core surface within a
-  10-minute budget. Web services get HTTP probes; a CLI image (an artifact with a `command:`)
+  and boots configured published artifacts and probes their declared surfaces.
+  The new local-wheel path additionally bounds setup/install/first use with one
+  per-wheel budget and records phase results; legacy paths retain their behavior. Web services get HTTP probes; a CLI image (an artifact with a `command:`)
   is run to completion and must exit 0. One reusable workflow replaces the 60-line
   `smoke-published.yml` every repo copy-pastes:
 
@@ -150,28 +167,13 @@ jobs:
     uses: invigil/invigil/.github/workflows/stranger-gate.yml@7f31330715bb7e42f26032ce3e921fcf78d4acea  # v1.7.1
 ```
 
-### Fix by PR (Dependabot-for-legibility)
+### Fix by PR
 
-Opt in to a scheduled bot that applies Invigil's mechanical fixes on a work branch and opens
-**one batched PR** — governance scaffolds, agent context files, config hygiene. Three
-anti-noise rules are built in: it's opt-in only, one stable branch means one PR (never five),
-and a PR you close unmerged is a "no" the bot respects — it stays silent until you delete the
-`invigil/fixes` branch.
-
-```yaml
-# .github/workflows/legibility-fixes.yml
-name: Legibility fixes
-on:
-  schedule: [{ cron: "0 6 1 * *" }]   # monthly — these are one-time scaffolds, not deps
-  workflow_dispatch:
-jobs:
-  fix:
-    uses: invigil/invigil/.github/workflows/fix-pr.yml@7f31330715bb7e42f26032ce3e921fcf78d4acea  # v1.7.1
-```
-
-Under the hood it runs `invigil score --fix --pr-mode`: the fix engine's CI-lockout stays
-in force for protected branches — `--pr-mode` only permits fixes on a non-default branch,
-so nothing automated ever lands on `main` without a human merging the PR.
+The optional [fix workflow](.github/workflows/fix-pr.yml) applies mechanical fixes
+on a work branch and opens one batched PR. It uses `invigil score --fix --pr-mode`;
+protected-branch safeguards remain in place. Closing its PR without merging is
+respected until the work branch is deleted. See the
+[CLI reference](docs/cli-reference.md) for configuration and limits.
 
 ## Configuration
 
@@ -289,7 +291,9 @@ automate against; individual check verdicts are not, and every report carries a
 
 Issues and PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) and
 [good first issues](https://github.com/invigil/invigil/labels/good%20first%20issue). Invigil
-grades itself in CI (`self-score` job); a PR that lowers Invigil's own grade won't merge.
+grades itself in CI; self-score is currently report-only. See the scoped
+[beginner tasks](https://github.com/invigil/invigil/issues?q=is%3Aopen+label%3A%22good+first+issue%22)
+and [benchmark tasks](https://github.com/invigil/invigil/issues?q=is%3Aopen+label%3A%22help+wanted%22).
 
 ## License
 
