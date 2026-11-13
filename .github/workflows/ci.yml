@@ -40,6 +40,36 @@ jobs:
         run: uv sync --locked --extra mcp
       - run: uv run pytest --cov=invigil --cov-report=term-missing --cov-fail-under=80
 
+  dependency-audit:
+    name: Dependency audit (core + MCP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8
+      - name: Export exact runtime dependency sets
+        run: |
+          mkdir -p dependency-audit
+          uv export --locked --no-dev --no-emit-project --no-hashes --output-file dependency-audit/core.txt
+          uv export --locked --no-dev --no-emit-project --no-hashes --extra mcp --output-file dependency-audit/mcp.txt
+      - name: Audit core and optional MCP dependencies
+        run: |
+          uv run --no-project --with pip-audit==2.10.1 pip-audit --no-deps --disable-pip --strict --progress-spinner off --format json --output dependency-audit/core.json -r dependency-audit/core.txt
+          uv run --no-project --with pip-audit==2.10.1 pip-audit --no-deps --disable-pip --strict --progress-spinner off --format json --output dependency-audit/mcp.json -r dependency-audit/mcp.txt
+      - name: Save audit evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        with:
+          name: dependency-audit
+          path: dependency-audit/
+          if-no-files-found: warn
+          retention-days: 7
+
   self-score:
     name: Invigil grades Invigil (dogfood)
     runs-on: ubuntu-latest

@@ -62,6 +62,9 @@ Beta is not a date — it is a set of conditions. Invigil moves to
 1. **A published false-positive rate.** 30+ real third-party repos scored, every finding
    manually audited, the per-check error rate published with its methodology and known
    limits. Until Invigil can state how often it is wrong, nobody should gate on it.
+   In progress and published as it stands in
+   [How often Invigil is wrong](false-positives.md) — 27 repos of 30, 331 of 402
+   findings still unaudited, so this condition is **not yet met**.
 2. **Two consecutive minor releases with no `doctrine_version` bump.** The doctrine has to
    demonstrate it has settled, not merely assert it.
 3. **Bus factor above one.** A second maintainer with commit and release rights, or a

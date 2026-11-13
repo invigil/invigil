@@ -19,8 +19,10 @@ import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from .config import InvigilConfig
+from .wheel_check import WheelResult, verify_wheel
 
 
 class StrangerError(RuntimeError):
@@ -151,7 +153,12 @@ def _start_services(cfg: InvigilConfig, state: _Started) -> None:
         _run(*args)
 
 
-def _boot_artifacts(cfg: InvigilConfig, state: _Started) -> int | None:
+def _boot_artifacts(
+    cfg: InvigilConfig,
+    state: _Started,
+    repo: Path | None = None,
+    wheel_results: dict[int, WheelResult] | None = None,
+) -> int | None:
     """Boot each artifact; return the port of the last HTTP-serving (ghcr) one."""
     default_port = None
     for i, art in enumerate(cfg.artifacts):
@@ -176,6 +183,15 @@ def _boot_artifacts(cfg: InvigilConfig, state: _Started) -> int | None:
             state.containers.append(name)
             _run(*args)
             default_port = int(art.get("port", default_port or 8000))
+        elif art.get("type") == "wheel":
+            result = verify_wheel(art, repo or Path.cwd(), cfg.boot_budget_minutes * 60)
+            if wheel_results is not None:
+                wheel_results[i] = result
+            print(f"  {result.status}  {result.artifact} [{result.phase}]: {result.detail}")
+            if result.sha256:
+                print(f"      sha256: {result.sha256}")
+            if result.status != "PASS":
+                raise StrangerError(f"wheel {result.phase}: {result.detail}\n{result.output}\nfix: {result.fix}")
         elif art.get("type") == "pypi":
             _run("python", "-m", "venv", "/tmp/invigil-venv")
             _run("/tmp/invigil-venv/bin/pip", "install", "--quiet", art["name"])
@@ -201,15 +217,30 @@ def _teardown(state: _Started) -> None:
         _run("docker", "rm", "-f", c, check=False)
 
 
-def run(cfg: InvigilConfig) -> None:
+def run(
+    cfg: InvigilConfig,
+    *,
+    repo: Path | None = None,
+    wheel_results: dict[int, WheelResult] | None = None,
+) -> None:
     """Full Stranger Gate: services up, artifacts booted, probes asserted, teardown."""
     if not cfg.artifacts:
         raise StrangerError("no artifacts declared in .invigil.yml — nothing for the stranger to boot")
+    if wheel_results is not None:
+        for i, art in enumerate(cfg.artifacts):
+            if art.get("type") == "wheel":
+                wheel_results[i] = WheelResult(
+                    artifact=str(art.get("path", "")),
+                    status="NOT_RUN",
+                    phase="pending",
+                    detail="not reached",
+                    fix="",
+                )
     probes = [Probe.from_dict(p) for p in cfg.probes]
     state = _Started()
     try:
         _start_services(cfg, state)
-        default_port = _boot_artifacts(cfg, state)
+        default_port = _boot_artifacts(cfg, state, repo, wheel_results)
         run_probes(probes, default_port, cfg.boot_budget_minutes * 60)
         print(f"Stranger gate OK: {len(cfg.artifacts)} artifact(s), {len(probes)} probe(s).")
     finally:

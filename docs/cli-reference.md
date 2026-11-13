@@ -145,6 +145,77 @@ invigil stranger .
 invigil stranger /path/to/repo
 ```
 
+Verify a local Python wheel before publishing (initially tested on Linux):
+
+```yaml
+artifacts:
+  - type: wheel
+    path: dist/example-0.1.0-py3-none-any.whl
+    command: [python, -c, "import example; print(example.hello())"]
+    expect_contains: "hello"
+boot_budget_minutes: 2
+```
+
+Build the wheel with your project's existing build command first. `path` names
+one wheel relative to the configuration directory; glob patterns are rejected.
+The wheel is copied and hashed, installed into a fresh temporary venv, and tested
+from an empty working directory. `command` is an argv list, not shell text;
+its executable must be `python` or a script installed in that venv. Every wheel
+requires a first-use command. Exit zero is required, plus `expect_contains` when
+provided. `--version` alone only verifies that invocation, not the application's
+main operation.
+
+Each wheel has one `boot_budget_minutes` budget covering environment creation,
+installation and first use. The environment is removed afterward. The report
+includes the wheel SHA-256, the failing phase, and bounded diagnostic output.
+`FAIL` means the declared operation failed; `ERROR` means configuration, setup,
+installation or execution could not complete. Both produce CLI exit code 1.
+An install error alone does not establish a defective application.
+
+Dependencies normally resolve through pip's default index; host pip configuration,
+Python paths and environment variables are not inherited. For offline runs, set
+`wheelhouse: path/to/wheels` to a directory containing the required dependencies
+(relative to the configuration directory). This disables indexes. Artifact `env`
+values are explicitly passed to first use, with isolation settings protected.
+Do not put credentials in the configuration. Explicit values are redacted from
+captured output, but arbitrary application output is not guaranteed secret-free.
+
+A venv isolates Python dependencies, **not untrusted code**. Use a disposable CI
+worker/container without credentials for unfamiliar artifacts. The runner does
+not publish, automatically execute README instructions, or claim release safety.
+Existing PyPI/container artifact behavior is unchanged. To save machine-readable evidence:
+
+```bash
+invigil stranger . --format json --output first-use.json
+```
+
+Without `--output`, JSON is written to stdout; progress goes to stderr. Reports
+are saved on verification failures too. Exit codes remain 0 for success, 1 for
+verification/setup failure, and 2 if the report cannot be written or arguments
+are invalid. The output directory must already exist.
+
+Execution JSON uses `schema_version: 1`, separate from scorecard JSON. It includes
+an overall status/detail and a `wheels` list with configuration artifact indexes,
+SHA-256, command, Python/platform, installed dependency names/versions, elapsed
+time and per-phase results. Phases are environment, installation, inventory and
+first-use; each has status, return code (nullable), elapsed time and bounded
+combined stdout/stderr. Dependencies are observed versions, not a lockfile or a
+security attestation. A failed earlier artifact leaves later wheels `NOT_RUN`.
+For legacy PyPI/container artifacts, the overall outcome is reported but detailed
+execution remains in stderr. The runner stops at the first failure.
+
+See [the copyable wheel workflow](../examples/wheel-first-use.yml). Review its
+pinned preview commit and replace the first-use command/expected output. This feature is
+unreleased: installing the existing PyPI version will not provide these options.
+The workflow builds one candidate, verifies it, and saves evidence even on failure;
+it never publishes. It uses GitHub-hosted Linux workers with read-only repository
+permissions and no persisted checkout credentials. Do not add deployment secrets
+to this job. Network installation resolves dependencies at run time; use a local
+wheelhouse for controlled offline dependency resolution.
+
+Artifact retention follows [GitHub's upload-artifact action](https://github.com/actions/upload-artifact);
+the example retains the report and candidate wheel for seven days.
+
 `.invigil.yml` artifact declaration:
 ```yaml
 artifacts:

@@ -11,6 +11,8 @@ The [README](../README.md) is the landing page. Deep docs live here.
   automation on, which are expected to move, and the conditions for Beta.
 - [Good first issues](good-first-issues.md) — how the GFI pool is shaped, and how to
   pick one up.
+- [How often Invigil is wrong](false-positives.md) — the false-positive audit: method,
+  per-check error rate, what was fixed, and what is still unaudited.
 
 For the `.invigil.yml` field reference the authoritative source is the
 [JSON schema](../schema/invigil.schema.json) plus the [examples](../examples/).

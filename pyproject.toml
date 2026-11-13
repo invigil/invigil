@@ -1,6 +1,6 @@
 [project]
 name = "invigil"
-version = "1.7.1"
+version = "1.8.0"
 description = "Linters check your code. Invigil checks whether your repo is legible — to newcomers and to AI agents."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -39,7 +39,7 @@ dev = [
 ]
 # The MCP server is opt-in so the core CLI stays zero-dep beyond PyYAML.
 mcp = [
-    "mcp>=1.0",
+    "mcp>=1.30,<2",
 ]
 
 [dependency-groups]
@@ -55,6 +55,19 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/invigil"]
+
+[tool.hatch.build]
+# Local assistant/planning files may be untracked rather than globally ignored.
+# Git exclusions alone do not keep them out of a locally built source archive.
+exclude = [
+    "/PLAN.md",
+    "/CLAUDE.md",
+    "/CLAUDE.local.md",
+    "/.mcp.json",
+    "/.claude/**",
+    "/.codex/**",
+    "/.agents/**",
+]
 
 [tool.ruff]
 line-length = 120

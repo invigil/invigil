@@ -6,7 +6,27 @@ All notable changes to Invigil are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+- Local wheel first-use verification through `invigil stranger`: fresh temporary
+  environments outside the checkout, explicit command/output expectations, artifact
+  hashing, offline wheelhouse support, and bounded execution with cleanup.
+- Stranger text/JSON report files with phase results, dependency inventory,
+  timings and NOT_RUN outcomes; copyable wheel-verification CI example.
+- GitHub-hosted wheel first-use checks on Python 3.11/3.12, with exact candidate
+  hashes, offline broken/fixed demo evidence, and a concurrent-install regression
+  check for independent environments and cleanup.
+
 ### Fixed
+- Exclude local planning and assistant files explicitly from distribution builds;
+  Git's local exclude file alone does not protect a source archive.
+- Recognize conventional license, README, documentation and contributor-file
+  names; distinguish public key/build configuration files from credential-bearing
+  candidates. Numeric/short credentials and values containing placeholder words
+  remain findings. The accompanying false-positive measurements are a historical
+  audit snapshot, not a claim about the current error rate.
+- Require patched MCP 1.x support and refresh the lockfile's MCP, PyJWT and
+  cryptography versions. CI audits the locked core and optional MCP dependency
+  sets and saves its advisory reports.
 - **`scorecard-score` now tells you the actual fix.** The check fetched the full
   Scorecard API response, read `.score`, and discarded every finding — then said
   *"triage the Scorecard findings"*. `CheckResult.fix` is documented as "exact

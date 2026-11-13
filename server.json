@@ -6,13 +6,13 @@
     "url": "https://github.com/invigil/invigil",
     "source": "github"
   },
-  "version": "1.7.0",
+  "version": "1.8.0",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "invigil",
-      "version": "1.7.0",
+      "version": "1.8.0",
       "runtimeHint": "uvx",
       "runtimeArguments": [
         {
