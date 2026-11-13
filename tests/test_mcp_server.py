@@ -24,8 +24,8 @@ def _fixture_repo(tmp_path):
     return tmp_path
 
 
-def _stdio_session_roundtrip(repo) -> tuple[set[str], str, str]:
-    """Spawn the server, list tools, call evaluate_repo + preview_fixes."""
+def _stdio_session_roundtrip(repo) -> tuple[set[str], str, str, str]:
+    """Spawn the server, list tools, and exercise all three over stdio."""
     params = StdioServerParameters(command=sys.executable, args=["-m", "invigil.cli", "mcp"])
 
     async def go():
@@ -34,17 +34,22 @@ def _stdio_session_roundtrip(repo) -> tuple[set[str], str, str]:
                 await session.initialize()
                 tools = {t.name for t in (await session.list_tools()).tools}
                 ev = await session.call_tool("evaluate_repo", {"path": str(repo)})
+                cg = await session.call_tool("check_group", {"path": str(repo), "group": "ai"})
                 pf = await session.call_tool("preview_fixes", {"path": str(repo)})
-                return tools, ev.content[0].text, pf.content[0].text
+                # MCP 2 uses snake_case model fields; wire aliases are stable.
+                for result in (ev, cg, pf):
+                    assert not result.model_dump(by_alias=True)["isError"]
+                return tools, ev.content[0].text, cg.content[0].text, pf.content[0].text
 
     return anyio.run(go)
 
 
 def test_stdio_server_lists_tools_and_scores_a_repo(tmp_path):
     repo = _fixture_repo(tmp_path)
-    tools, report, preview = _stdio_session_roundtrip(repo)
+    tools, report, group_report, preview = _stdio_session_roundtrip(repo)
     assert tools == EXPECTED_TOOLS
     assert report.startswith(f"invigil repo={repo.name} gate=")
+    assert group_report.startswith(f"invigil repo={repo.name} gate=")
     assert '"mutations"' in preview  # dry-run plan, JSON shape
 
 

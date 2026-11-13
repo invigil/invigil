@@ -24,12 +24,13 @@ jobs:
       - run: uv run ruff format --check .
 
   test:
-    name: Tests (pytest ${{ matrix.python }})
+    name: Tests (pytest ${{ matrix.python }})${{ matrix.mcp == '1.x' && ' - MCP 1.x' || '' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python: ["3.11", "3.12"]
+        mcp: ["locked", "1.x"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
@@ -38,7 +39,10 @@ jobs:
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8
       - name: Install (locked, with the mcp extra so the stdio tests run)
         run: uv sync --locked --extra mcp
-      - run: uv run pytest --cov=invigil --cov-report=term-missing --cov-fail-under=80
+      - name: Install MCP 1.x compatibility version
+        if: matrix.mcp == '1.x'
+        run: uv pip install "mcp==1.30.0"
+      - run: uv run --no-sync pytest --cov=invigil --cov-report=term-missing --cov-fail-under=80
 
   dependency-audit:
     name: Dependency audit (core + MCP)

@@ -24,9 +24,10 @@ All notable changes to Invigil are documented here. Format follows
   candidates. Numeric/short credentials and values containing placeholder words
   remain findings. The accompanying false-positive measurements are a historical
   audit snapshot, not a claim about the current error rate.
-- Require patched MCP 1.x support and refresh the lockfile's MCP, PyJWT and
-  cryptography versions. CI audits the locked core and optional MCP dependency
-  sets and saves its advisory reports.
+- Support MCP 2.x's renamed server interface while retaining MCP 1.30+
+  compatibility. Lock MCP 2.3.0 and exercise both SDK majors on Python 3.11/3.12,
+  including all three tools over stdio. CI audits the locked core and optional
+  MCP dependency sets and saves its advisory reports.
 - **`scorecard-score` now tells you the actual fix.** The check fetched the full
   Scorecard API response, read `.score`, and discarded every finding — then said
   *"triage the Scorecard findings"*. `CheckResult.fix` is documented as "exact
