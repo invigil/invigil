@@ -83,6 +83,26 @@ jobs:
           digest="$(docker inspect --format='{{index .RepoDigests 0}}' "$image:$ver")"
           cosign sign --yes "$digest"
 
+      # The release page is the second thing anyone reads after the README, and
+      # `generate_release_notes` filled it with a Dependabot list — v1.7.1 opened
+      # with three version bumps and "@rrskris made their first contribution"
+      # (about the repo owner), while the feature it shipped went unmentioned.
+      # CHANGELOG.md already says what changed and why; use it verbatim.
+      - name: Extract this version's CHANGELOG section
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          awk -v v="$ver" '
+            $0 ~ "^## \\[" v "\\]" { found = 1; next }
+            found && /^## \[/       { exit }
+            found                   { print }
+          ' CHANGELOG.md > release-notes.md
+          # A release whose notes we cannot produce is a release nobody can read.
+          if [ ! -s release-notes.md ]; then
+            echo "::error::no CHANGELOG.md section for [$ver] — add one before tagging"
+            exit 1
+          fi
+          cat release-notes.md
+
       - name: GitHub Release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228  # v3.0.2
         with:
@@ -90,7 +110,7 @@ jobs:
             dist/*
             invigil.spdx.json
             invigil.spdx.json.sigstore.json
-          generate_release_notes: true
+          body_path: release-notes.md
 
       # Keep the `invigil/invigil@v1` tag and `rev: v1` pointing at the newest
       # v1.x.y. Safe with the trigger above: `v1` doesn't match v*.*.*, so
