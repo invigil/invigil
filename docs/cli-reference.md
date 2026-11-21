@@ -29,9 +29,9 @@ repos:
 | Code | Meaning |
 |---|---|
 | `0` | Success / gate satisfied (or report-only mode) |
-| `1` | `--enforce` active and gate is below target; or `invigil check` found failures; or `--fix` staged changes (pre-commit signal) |
-| `2` | Usage error or path not found |
-| `3` | `--fix` refused because `CI=true` (CI-lockout safety) |
+| `1` | `--enforce` active and gate is below target; or `invigil check` found failures; or `--fix` staged changes (pre-commit signal); or an artifact failed verification |
+| `2` | Usage error, path not found, or report output could not be written |
+| `3` | A fix operation was refused, or `invigil mcp` needs its optional dependency |
 
 ---
 
@@ -133,6 +133,32 @@ invigil check layout . --fix            # auto-fix and stage
 | `PATH` | `.` | Path to the repo root |
 | `--online` | off | Allow network checks in this group (default: offline-only) |
 | `--fix` | off | Apply fixes and stage; exits 1 as pre-commit signal to re-commit |
+
+---
+
+## `invigil mcp`
+
+Install `invigil[mcp]==1.8.0` and configure the client to launch `invigil mcp`
+over stdio. Version 1.8.0 supports MCP SDK 1.30 through 1.x and SDK 2.x. Use a
+trusted checkout and pass an absolute repository path on the server's machine.
+Relative paths resolve from the server's working directory.
+
+| Tool | Arguments | Result in the MCP text content |
+|---|---|---|
+| `evaluate_repo` | Required `path` (string). Optional `format` defaults to `"llm"` and also accepts `"json"`. Optional `offline` defaults to `true`. | A compact repository scorecard with findings and fixes, or the scorecard serialized as JSON text. |
+| `check_group` | Required `path` and `group` (strings). See [available groups](#available-groups). | A compact scorecard for the selected group, evaluated offline. |
+| `preview_fixes` | Required `path` (string). | A JSON string with `fixable_checks`, `no_fix_available`, `would_change_files`, and `mutations`. The built-in fixer runs in dry-run mode. |
+
+For example, pass these parameters to the client's MCP `tools/call` method
+after substituting the absolute path to your repository:
+
+```json
+{"name": "check_group", "arguments": {"path": "/work/my-project", "group": "ai"}}
+```
+
+A missing path, invalid group, or unsupported format produces a tool error.
+A successful call can return a scorecard with failing checks. To verify an
+installed wheel and save its execution report, use [`invigil stranger`](#invigil-stranger-path).
 
 ---
 

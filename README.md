@@ -114,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1        # v7.0.1
-      - uses: invigil/invigil@7f31330715bb7e42f26032ce3e921fcf78d4acea        # v1.7.1
+      - uses: invigil/invigil@933dc13cedceac9f75c2ccf9b66aa1f6851fa727        # v1.8.0
         with:
           enforce: "false"              # flip to true once the grade is stable
 ```
@@ -130,7 +130,7 @@ The action exposes the report and both badges as step outputs — pipe the score
 summary, publish the badge JSON wherever shields.io can reach it:
 
 ```yaml
-      - uses: invigil/invigil@7f31330715bb7e42f26032ce3e921fcf78d4acea        # v1.7.1
+      - uses: invigil/invigil@933dc13cedceac9f75c2ccf9b66aa1f6851fa727        # v1.8.0
         id: invigil
         with: { comment: "false" }
       - run: cat "${{ steps.invigil.outputs.report }}" >> "$GITHUB_STEP_SUMMARY"
@@ -161,7 +161,7 @@ on:
   workflow_dispatch:
 jobs:
   stranger:
-    uses: invigil/invigil/.github/workflows/stranger-gate.yml@7f31330715bb7e42f26032ce3e921fcf78d4acea  # v1.7.1
+    uses: invigil/invigil/.github/workflows/stranger-gate.yml@933dc13cedceac9f75c2ccf9b66aa1f6851fa727  # v1.8.0
 ```
 
 ### Fix by PR
@@ -255,21 +255,20 @@ In CI the Action emits it for you — `steps.<id>.outputs.ai-badge` is the path 
 
 ### MCP server
 
-Agents don't have to shell out — Invigil speaks MCP natively (`mcp-name: io.github.invigil/invigil`):
+An editor agent can check a trusted checkout before a pull request. Start with
+`evaluate_repo`, preview proposed edits with `preview_fixes`, then call
+`check_group` after an edit to see the updated findings.
 
-```bash
-pip install "invigil[mcp]"    # optional extra; the core CLI stays zero-dep
-invigil mcp                   # stdio server
-```
+Install with `pip install "invigil[mcp]==1.8.0"` and launch `invigil mcp` over stdio.
+Clients using `mcpServers` can launch the same version with `uvx`:
 
 ```json
-// e.g. .mcp.json for Claude Code — any MCP client works
-{ "mcpServers": { "invigil": { "command": "uvx", "args": ["--from", "invigil[mcp]", "invigil", "mcp"] } } }
+{ "mcpServers": { "invigil": { "command": "uvx", "args": ["--from", "invigil[mcp]==1.8.0", "invigil", "mcp"] } } }
 ```
 
-Three read-only tools: `evaluate_repo` (the scorecard, `llm` or `json` format),
-`check_group` (one fast offline group), and `preview_fixes` (the mutation plan `--fix`
-would apply — the agent applies changes with its own edit tools, so nothing here writes).
+The registry identifier is `mcp-name: io.github.invigil/invigil`.
+See the [MCP tool reference](docs/cli-reference.md#invigil-mcp) for arguments,
+defaults, results, and an example call.
 
 ## The doctrine
 
