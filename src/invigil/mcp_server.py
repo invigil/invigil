@@ -11,13 +11,16 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+try:
+    from mcp.server import MCPServer
+except ImportError:  # MCP 1.x calls the same server interface FastMCP.
+    from mcp.server.fastmcp import FastMCP as MCPServer
 
 from .checks import GROUPS
 from .cli import score
 from .report import as_json, as_llm
 
-server = FastMCP(
+server = MCPServer(
     "invigil",
     instructions=(
         "Grades a repository against a product-quality doctrine (G1-G7 gates, "
