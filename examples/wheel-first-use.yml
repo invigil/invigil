@@ -1,6 +1,5 @@
 # Copy to .github/workflows/wheel-first-use.yml in the package being tested.
-# Review the pinned preview commit and replace the example command/output before enabling.
-# This feature is not yet in the published Invigil package.
+# Set the command and expected output to the first operation your users need.
 name: Wheel first use
 on:
   pull_request:
@@ -12,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      INVIGIL_REF: 331d8093d61b05156ec40f377c462bf584ef6a80
       FIRST_USE_COMMAND: '["python", "-c", "import example; print(example.hello())"]'
       FIRST_USE_EXPECT: hello
     steps:
@@ -23,12 +21,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install build and verification tools
-        run: |
-          if [[ ! "$INVIGIL_REF" =~ ^[0-9a-f]{40}$ ]]; then
-            echo 'Set INVIGIL_REF to a reviewed commit containing wheel verification.' >&2
-            exit 2
-          fi
-          python -m pip install build "invigil @ git+https://github.com/invigil/invigil.git@$INVIGIL_REF"
+        run: python -m pip install build invigil==1.8.0
       - name: Build the candidate wheel
         run: python -m build --wheel --outdir candidate-dist
       - name: Select the exact artifact and first-use operation

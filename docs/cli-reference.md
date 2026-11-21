@@ -204,9 +204,8 @@ security attestation. A failed earlier artifact leaves later wheels `NOT_RUN`.
 For legacy PyPI/container artifacts, the overall outcome is reported but detailed
 execution remains in stderr. The runner stops at the first failure.
 
-See [the copyable wheel workflow](../examples/wheel-first-use.yml). Review its
-pinned preview commit and replace the first-use command/expected output. This feature is
-unreleased: installing the existing PyPI version will not provide these options.
+See [the copyable wheel workflow](../examples/wheel-first-use.yml). Set the first-use command
+and expected output for your own package. Wheel checks require Invigil 1.8.0 or later.
 The workflow builds one candidate, verifies it, and saves evidence even on failure;
 it never publishes. It uses GitHub-hosted Linux workers with read-only repository
 permissions and no persisted checkout credentials. Do not add deployment secrets

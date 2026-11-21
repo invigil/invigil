@@ -6,10 +6,10 @@ product-quality doctrine and ships as a GitHub Action.
 ## Build / test / lint
 
 ```bash
-pip install -e . ruff pytest pytest-cov
-ruff check . && ruff format --check .        # lint + format gate
-pytest --cov=invigil --cov-fail-under=80     # tests + coverage floor
-invigil evaluate . --format llm              # dogfood: grade Invigil with Invigil, before every PR
+uv sync --locked --extra mcp
+uv run ruff check . && uv run ruff format --check .        # lint + format gate
+uv run --no-sync pytest --cov=invigil --cov-fail-under=80     # tests + coverage floor
+uv run --no-sync invigil evaluate . --format llm              # dogfood: grade Invigil with Invigil, before every PR
 ```
 
 ## Layout
