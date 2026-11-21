@@ -15,20 +15,18 @@ A package can install successfully and still fail its first useful command. Invi
 combines repository-quality checks with a Cold-Start Gate that exercises declared
 operations and reports the evidence needed to diagnose failures.
 
-**New in development:** verify an exact Python wheel before publication, outside the
-source checkout. The existing scorecard, published-artifact checks, and agent tools
-remain available. Wheel verification is **unreleased**; `pip install invigil` and the
-release pins below do not include it yet.
+**New in 1.8.0** — install a candidate Python wheel outside its source checkout,
+run its first useful command, and save the result with the wheel’s SHA-256.
 
-## Try the first-use demo (source preview)
+## Try the first-use demo
 
-On Linux with Python 3.11+ and venv support, use the source-preview branch:
+On Linux with Python 3.11+ and venv support, run the two wheel fixtures:
 
 ```bash
-git clone --branch feat/wheel-first-use-preview https://github.com/invigil/invigil.git
+git clone --branch v1.8.0 https://github.com/invigil/invigil.git
 cd invigil
 python3 -m venv .venv
-.venv/bin/python -m pip install -e .
+.venv/bin/python -m pip install invigil==1.8.0
 .venv/bin/python examples/first-use-demo/run.py
 ```
 
@@ -40,7 +38,7 @@ This is a synthetic example, not a claim about an upstream project's current rel
 [Verify your own wheel](docs/cli-reference.md#invigil-stranger-path) ·
 [CI workflow template](examples/wheel-first-use.yml)
 
-The preview requires an explicit command and optional expected output. A successful
+Wheel verification requires an explicit command and optional expected output. A successful
 run proves that operation worked in the recorded environment; it is not a general
 release-safety guarantee. Run unfamiliar artifacts in disposable workers without
 credentials—a Python venv is not a security sandbox.
@@ -57,7 +55,7 @@ Invigil does not replace your existing tools; it covers the product-quality gaps
 |---|---|
 | Repository scorecard | Checks documentation, configuration and quality conventions; suggests fixes |
 | Published-artifact Cold-Start Gate | Exercises configured package/container operations and HTTP probes |
-| Local-wheel first use (unreleased) | Verifies the candidate artifact; records its hash, phases and dependencies |
+| Local-wheel first use | Verifies the candidate artifact; records its hash, phases and dependencies |
 | Existing linters, scanners and tests | Continue checking code correctness and security alongside Invigil |
 
 A clean-install smoke script can detect the same packaging defects. Invigil aims
@@ -93,8 +91,7 @@ SPDX SBOM — verifiable with `cosign verify` against the GitHub OIDC identity.
 
 ## Quick Start
 
-These commands use the published scorecard. For wheel verification, use the source
-preview above.
+The commands below run the repository scorecard. The demo above exercises a built wheel.
 
 Run it locally on any repo:
 

@@ -6,8 +6,7 @@ Run from the Invigil checkout using the environment containing the new wheel ver
 .venv/bin/python examples/first-use-demo/run.py
 ```
 
-This feature is currently unreleased; the existing PyPI version does not include it.
-The script needs the checkout installed in that environment and Python's venv/pip
+Install Invigil 1.8.0 in that environment and ensure Python has venv/pip
 support. It builds tiny synthetic wheels with the standard library and installs
 without package indexes. No API key, model, Docker, or external project is required.
 

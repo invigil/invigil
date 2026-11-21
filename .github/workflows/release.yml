@@ -34,6 +34,19 @@ jobs:
           echo "tag=$tag  pyproject=$ver"
           [ "$tag" = "$ver" ] || { echo "::error::tag v$tag does not match pyproject version $ver"; exit 1; }
 
+      - name: Validate release notes before publication
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          awk -v heading="## [$ver]" '
+            $1 == "##" && ($1 " " $2) == heading { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          grep -q '[^[:space:]]' release-notes.md || {
+            echo "::error::Missing release notes for $ver"
+            exit 1
+          }
+
       - name: Build sdist + wheel
         run: |
           pip install --require-hashes -r .github/requirements/build.txt
@@ -90,7 +103,7 @@ jobs:
             dist/*
             invigil.spdx.json
             invigil.spdx.json.sigstore.json
-          generate_release_notes: true
+          body_path: release-notes.md
 
       # Keep the `invigil/invigil@v1` tag and `rev: v1` pointing at the newest
       # v1.x.y. Safe with the trigger above: `v1` doesn't match v*.*.*, so

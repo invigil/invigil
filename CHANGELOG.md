@@ -6,6 +6,8 @@ All notable changes to Invigil are documented here. Format follows
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-11-22
+
 ### Added
 - Local wheel first-use verification through `invigil stranger`: fresh temporary
   environments outside the checkout, explicit command/output expectations, artifact
@@ -24,19 +26,16 @@ All notable changes to Invigil are documented here. Format follows
   candidates. Numeric/short credentials and values containing placeholder words
   remain findings. The accompanying false-positive measurements are a historical
   audit snapshot, not a claim about the current error rate.
-- Require patched MCP 1.x support and refresh the lockfile's MCP, PyJWT and
-  cryptography versions. CI audits the locked core and optional MCP dependency
-  sets and saves its advisory reports.
-- **`scorecard-score` now tells you the actual fix.** The check fetched the full
-  Scorecard API response, read `.score`, and discarded every finding — then said
-  *"triage the Scorecard findings"*. `CheckResult.fix` is documented as "exact
-  command/edit to resolve"; that string was neither, and it is the same
-  can't-tell-you-how-to-pass-it anti-pattern Invigil exists to catch. It now names
-  the worst checks, the files (`.github/workflows/ci.yml:1`), and the remediation
-  pattern Scorecard never gives you — *set top-level `permissions: contents: read`,
-  elevate per-job*. Scorecard's `-1` (its own internal error) and `Info:` detail
-  lines are excluded, so nobody is sent to fix a working file. PASS/FAIL logic is
-  unchanged.
+- Support MCP 2.x's renamed server interface while retaining MCP 1.30+
+  compatibility. Lock MCP 2.3.0 and exercise both SDK majors on Python 3.11/3.12,
+  including all three tools over stdio. CI audits the locked core and optional
+  MCP dependency sets and saves its advisory reports.
+- The OpenSSF Scorecard check now names the lowest-scoring checks and gives
+  specific remediation guidance where evidence is available.
+
+### Known limitation
+- The environment example check can flag environment variables read only by
+  tests. Review these findings before changing runtime configuration. [#56](https://github.com/invigil/invigil/issues/56)
 
 ## [1.7.1] - 2026-07-27
 
