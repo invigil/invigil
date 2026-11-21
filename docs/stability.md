@@ -5,10 +5,11 @@ accurate label rather than modesty. This page says exactly what it means for you
 "Alpha" on its own tells you nothing you can plan around — and a tool that grades other
 projects on legibility owes you a straight answer about its own.
 
-Every report Invigil emits carries a **`doctrine_version`** (`doctrine=N` in
+Every repository scorecard carries a **`doctrine_version`** (`doctrine=N` in
 `--format llm`, `doctrine_version` in `--format json`). It is independent of the package
 version and it moves whenever a change could alter your verdict without you changing
-anything.
+anything. Wheel execution reports carry their own `schema_version`. See the
+[execution JSON reference](cli-reference.md#invigil-stranger-path).
 
 ## Stable — build on these
 
@@ -18,8 +19,8 @@ version bump with a deprecation period, Alpha or not.
 | Surface | Contract |
 |---|---|
 | **CLI invocation** | `invigil score`/`evaluate`, `check`, `stranger`, `portfolio`, `mcp` and their documented flags keep working. New flags may be added. |
-| **Exit codes** | `0` ok · `1` below gate / failures found · `2` usage error · `3` refused (CI lockout). Enforced by a test that reads `docs/cli-reference.md` — if the code can return it, the table documents it. |
-| **JSON report shape** | Top-level keys and the per-check object keys are additive-only. New keys may appear; existing ones do not change meaning or disappear. |
+| **Exit codes** | `0` ok · `1` below gate / failures found · `2` usage error · `3` refused or optional MCP dependency unavailable. Enforced by a test that reads `docs/cli-reference.md` — if the code can return it, the table documents it. |
+| **Scorecard JSON report shape** | Top-level keys and the per-check object keys are additive-only. New keys may appear; existing ones do not change meaning or disappear. |
 | **Badge JSON** | `--format badge` and `--format ai-badge` emit the shields.io endpoint shape. |
 | **MCP tool names and signatures** | `evaluate_repo`, `check_group`, `preview_fixes`. All three are read-only; `preview_fixes` returns a plan and never writes. |
 | **`.invigil.yml` v1** | Fields in [the schema](../schema/invigil.schema.json) keep working. A test keeps the schema in sync with the code, so it cannot silently drift. |
